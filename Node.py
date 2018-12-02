@@ -9,13 +9,22 @@ class Node:
 		self.pos = pos #tuple for the position
 		self.discovered = discovered
 		self.edges = {} #dict of edges, keys are coords and values are edge weight
+		self.agent_on = False
 		
 		#setting up vars for D* Lite
-		self.g = float('inf')
+		self.g_D = float('inf')
 		self.rhs = float('inf')
+		
+		#setup vars for A*
+		self.f_A = 0
+		self.g_A = 0
+		self.h_A = 0
 
 	def __str__(self):
-		return str(self.pos[0]) + str(self.pos[1])
+		return "x: " + str(self.pos[0]) + " " + "y: " + str(self.pos[1])
+		
+	def __eq__(self,comparator):
+		return self.pos == comparator.pos
 		
 	def set_up(self,node):
 		self.up = node
