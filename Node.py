@@ -11,10 +11,6 @@ class Node:
 		self.edges = {} #dict of edges, keys are coords and values are edge weight
 		self.agent_on = False
 		
-		#setting up vars for D* Lite
-		self.g_D = float('inf')
-		self.rhs = float('inf')
-		
 		#setup vars for A*
 		self.f_A = 0
 		self.g_A = 0
