@@ -13,8 +13,8 @@
 # Distance()
 # Returns manhattan distance between two given positions
 # Takes in two tuples, position a, and position b
-def Distance(pos_a, pos_b):
-    return abs(pos_a[0] - pos_b[0]) + abs(pos_a[1] - pos_b[1])
+def Distance(node_a, node_b):
+    return abs(node_a.pos[0] - node_b.pos[0]) + abs(node_a.pos[1] - node_b.pos[1])
 
 # EPSOCycle()
 # Completes one cycle of the Extended Particle Swarm Optimization Algorithm
@@ -48,39 +48,54 @@ def Distance(pos_a, pos_b):
 # No Target Sharing
 # No other agent is closer to any given agent's target, unless there is no better target choice
 # No next-move collisions between agents
-# Others?
 def PPSOCycle(agents):
     ready_to_move = False
+
     agents_that_move = [1] * len(agents)
 
-    # Check for agents completed with their paths, ensures every agent has a path if there are enough undiscovered locations
+    # Check for agents completed with their paths,
+    # ensures every agent has a path if there are enough undiscovered locations
     for agent_index in range(len(agents)):
-        if (len(agents[agent_index].path) == 0) and (len(agents[agent_index].maze.undiscovered) >= len(agents)):
-            agents[agent_index].discover(agents[agent_index].current_node)
-        elif (len(agents[agent_index].path) == 0):
-            # there arent enough positions, this agent doesn't move
-            agents_that_move[agent_index] = 0
+        if (len(agents[agent_index].path) == 0) or (agents[agent_index].goal == agents[agent_index].current_node):
+            agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
+
+            print(agents[agent_index].path)
+
+            if agents[agent_index].path == False:
+                # nothing in agent's queue, grab from large pool
+
+                if len(agents[agent_index].maze.undiscovered) > 0:
+                    agents[agent_index].undiscovered.put(agents[agent_index].maze.undiscovered[0])
+                    agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
+
+                else:
+                    # deactivate agent, nowhere for it to go
+                    print("Deactivating agent", agent_index)
+                    agents_that_move[agent_index] = 0
+
+
 
     # Conditional loop, loops until best solution for all agents is found
     while (ready_to_move == False):
-        num_bad_conditions = 0 # number of issues with the next cycle to resolve
+        num_bad_conditions = 0  # number of issues with the next cycle to resolve
         outer_agent_moving_index = 0
         for agent in agents:
             moving_index = 0
             for check_agent in agents:
 
-                # only look at agent if it is active and is not paused
-                if len(check_agent.path) > 0 and agents_that_move[moving_index] == 1:
+                # only look at agent if it is active and is not paused and not itself
+                if (agent != check_agent) and (len(check_agent.path) > 0) and (agents_that_move[moving_index] == 1):
 
                     #***** CHECK FOR COLLISIONS
                     # is there someone in the next node
-                    if (check_agent.path[0].agent_on == True):
+                    if (check_agent.path[0].pos == agent.current_pos):
+                        print("Someone is in the next node")
                         num_bad_conditions += 1
                         # if they intend to move, go ahead
                             # DON'T NEED TO MODIFY ANYTHING
                         # if they are paused due to inactivity, swap targets with them, you become inactive
                         if (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) == 0):
-                            agent.ASTAR(agent.current_pos, check_agent.path[-1])
+                            agent.ASTAR(agent.current_pos, check_agent.goal)
                             agents_that_move[outer_agent_moving_index] = 1
 
                             check_agent.path = []
@@ -93,6 +108,7 @@ def PPSOCycle(agents):
                     # is there going to be a collision where they move into the same spot
                     if (agents_that_move[outer_agent_moving_index] == 1):
                         if(agent.path[0] == check_agent.path[0]):
+                            print("collision imminent")
                             num_bad_conditions += 1
                             agents_that_move[outer_agent_moving_index] = 0
 
@@ -101,18 +117,20 @@ def PPSOCycle(agents):
 
                         # check for shared targets
                         if (agent.goal == check_agent.goal):
+                            print("Duplicate targets!")
                             # find the furthest of the two agents and tell it to rediscover
                             if (len(agent.path) > len(check_agent.path)):
-                                agent.discover()
+                                agent.path = agent.discover(agent.current_node)
                             else:
-                                    check_agent.discover()
+                                check_agent.path = check_agent.discover(check_agent.current_node)
                             num_bad_conditions += 1
 
                         # check for target swapping, if two agents are closer to eachothers goals than their own
-                        if (Distance(agent.goal, check_agent.current_pos) < Distance(agent.goal, agent.current_pos)) and (Distance(check_agent.goal, agent.current_pos) < Distance(check_agent.goal, agent.current_pos)):
-                            temp_goal = agent.path[-1]
-                            agent.ASTAR(agent.current_node, check_agent.path[-1])
-                            check_agent.ASTAR(check_agent.current_node, temp_goal)
+                        if (Distance(agent.goal, check_agent.current_node) < Distance(agent.goal, agent.current_node)) and (Distance(check_agent.goal, agent.current_node) < Distance(check_agent.goal, agent.current_node)):
+                            print("Swapping Targets")
+                            temp_goal = agent.goal
+                            agent.path = agent.ASTAR(agent.current_node, check_agent.goal)
+                            check_agent.path = check_agent.ASTAR(check_agent.current_node, temp_goal)
                             num_bad_conditions += 1
 
                 moving_index += 1
@@ -122,9 +140,16 @@ def PPSOCycle(agents):
         if (num_bad_conditions == 0):
             ready_to_move = True
 
+    print("AGENTS THAT MOVE", agents_that_move)
+
     # Move
     for cur_agent_index in range(len(agents)):
         if (agents_that_move[cur_agent_index] == 1): # if agent is supposed to move this cycle
+            print("PATH")
+            for i in agents[cur_agent_index].path:
+                print("<", i.pos, "> ", end='')
+            print("")
+            print("Moving agent", cur_agent_index)
             agents[cur_agent_index].move(agents[cur_agent_index].path)
 
 
