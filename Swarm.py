@@ -164,10 +164,8 @@ def PPSOCycle(agents):
     # Check for agents completed with their paths,
     # ensures every agent has a path if there are enough undiscovered locations
     for agent_index in range(len(agents)):
-        if ((len(agents[agent_index].path) == 0) or (agents[agent_index].goal == agents[agent_index].current_node)) and len(agents[agent_index].maze.undiscovered) > 0:
+        if ((len(agents[agent_index].path) == 0) or (agents[agent_index].goal == agents[agent_index].current_node)):
             agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
-
-            print(agents[agent_index].path)
 
             if agents[agent_index].path == False:
                 # nothing in agent's queue, grab from large pool
@@ -215,7 +213,7 @@ def PPSOCycle(agents):
                             agents_that_move[moving_index] = 0
 
                     # is there going to be a collision where they move into the same spot
-                    if (agents_that_move[outer_agent_moving_index] == 1):
+                    if (agents_that_move[outer_agent_moving_index] == 1) and (len(agent.path) > 0):
                         if(agent.path[0] == check_agent.path[0]):
                             print("collision imminent")
                             num_bad_conditions += 1
@@ -254,9 +252,5 @@ def PPSOCycle(agents):
     # Move
     for cur_agent_index in range(len(agents)):
         if (agents_that_move[cur_agent_index] == 1): # if agent is supposed to move this cycle
-            print("PATH")
-            for i in agents[cur_agent_index].path:
-                print("<", i.pos, "> ", end='')
-            print("")
             print("Moving agent", cur_agent_index)
             agents[cur_agent_index].move(agents[cur_agent_index].path)

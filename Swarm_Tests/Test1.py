@@ -18,7 +18,17 @@ def PrintAgent(agent, agent_num):
     print("  Goal:", agent.goal.pos)
     print("")
 
+def check_win_condition(agents):
+    # check if there are undiscovered nodes
+    if len(agents[0].maze.undiscovered) > 0:
+        return False
 
+    # check if all undiscovered nodes have been reached
+    for agent in agents:
+        if agent.goal != agent.current_node:
+            return False
+
+    return True
 
 node1 = Node(False,False,False,False,(0,0),False)
 node2 = Node(False,False,False,False,(0,-1),False)
@@ -45,9 +55,7 @@ print("Begin maze")
 print("Agent 1 location: ", agent1.current_pos)
 print("Agent 2 location: ", agent2.current_pos)
 
-
-
-while(len(agent1.maze.undiscovered) > 0):
+while not check_win_condition(agents):
     input(">>> Press enter to continue")
     PPSOCycle(agents)
     PrintAgent(agents[0], 1)
