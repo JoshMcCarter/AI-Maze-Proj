@@ -11,41 +11,17 @@
 
 
 # Distance()
-# Returns length of the path between two given positions
+# Returns manhattan distance between two given positions
 # Takes in two tuples, position a, and position b
 def Distance(pos_a, pos_b):
-    return #TODO return a path length between two positions
-
-
-# SimpleCycle()
-# Completes one cycle given N agents and the master maze for reference.
-# Cycle Steps:
-#   1. Each agent updates their map the the discoveries of other agents
-#   2. Each agent decides where their next move location will be
-#   3. Handle next-cycle collisions between agents
-#   4. Handle target sharing between agents
-#   5. Complete steps 3 and 4 until all conditions for success are met
-#   6. Each agent moves in the maze and updates the 'master' with their pos.
-def SimpleCycle(agents, master_map):
-
-    # 1. Each agent updates their map with the discoveries of other agents
-    # 2. Each agent decides where their next move location will be
-    # 3. Handle next-cycle collisions between agents
-    # 4. Handle target sharing between agents
-    # 5. Complete steps 3 and 4 until all conditions for success are met
-    # 6. Each agent moves in the maze and updates the 'master' with their pos.
-
-
-# RDPSOCycle()
-# Completes one cycle of the Robotic Darwinian Particle Swarm Optimization
-def RDPSOCycle(agents, master_map):
-
+    return abs(pos_a[0] - pos_b[0]) + abs(pos_a[1] - pos_b[1])
 
 # EPSOCycle()
 # Completes one cycle of the Extended Particle Swarm Optimization Algorithm
 # This algorithm compares each agent against the activities of its neighbor within some defined radius
 # Agent paths outside that radius will not effect the given agent's activities
-def EPSOCycle(agents, master_map, radius):
+# TODO Implement this one
+# def EPSOCycle(agents, master_map, radius):
 
     # Evaluate robot individual solution
 
@@ -66,7 +42,6 @@ def EPSOCycle(agents, master_map, radius):
 
 # PPSOCycle()
 # agents: list of instantiated agents with pre-populated current positions
-# master_map: master copy of the map to be updated by the individual agents
 # Completes one cycle of the Physically-embedded Particle Swarm Optimization Algorithm
 # DESC: This algorithm iterates through solutions until optimal solution is met
 # Optimal Solution Descriptions:
@@ -74,63 +49,87 @@ def EPSOCycle(agents, master_map, radius):
 # No other agent is closer to any given agent's target, unless there is no better target choice
 # No next-move collisions between agents
 # Others?
-def PPSOCycle(agents, master_map):
+def PPSOCycle(agents):
     ready_to_move = False
+    agents_that_move = [1] * len(agents)
+
+    # Check for agents completed with their paths, ensures every agent has a path if there are enough undiscovered locations
+    for agent_index in range(len(agents)):
+        if (len(agents[agent_index].path) == 0) and (len(agents[agent_index].maze.undiscovered) >= len(agents)):
+            agents[agent_index].discover(agents[agent_index].current_node)
+        elif (len(agents[agent_index].path) == 0):
+            # there arent enough positions, this agent doesn't move
+            agents_that_move[agent_index] = 0
 
     # Conditional loop, loops until best solution for all agents is found
     while (ready_to_move == False):
         num_bad_conditions = 0 # number of issues with the next cycle to resolve
-
+        outer_agent_moving_index = 0
         for agent in agents:
+            moving_index = 0
             for check_agent in agents:
 
-                # check for shared targets
-                if (agent.goal == check_agent.goal):
-                    # find the furthest of the two agents and tell it to rediscover
-                    if (Distance(agent.goal, agent.current_pos) > Distance(check_agent.goal, check_agent.current_pos)):
-                        agent.discover()
-                    else:
-                        check_agent.discover()
-                    num_bad_conditions += 1
+                # only look at agent if it is active and is not paused
+                if len(check_agent.path) > 0 and agents_that_move[moving_index] == 1:
 
-                # check for target swapping, if two agents are closer to eachothers goals than their own
-                elif (Distance(agent.goal, check_agent.current_pos) < Distance(agent.goal, agent.current_pos)) and (Distance(check_agent.goal, agent.current_pos) < Distance(check_agent.goal, agent.current_pos)):
-                    agent.goal, check_agent.goal = check_agent.goal, agent.goal
+                    #***** CHECK FOR COLLISIONS
+                    # is there someone in the next node
+                    if (check_agent.path[0].agent_on == True):
+                        num_bad_conditions += 1
+                        # if they intend to move, go ahead
+                            # DON'T NEED TO MODIFY ANYTHING
+                        # if they are paused due to inactivity, swap targets with them, you become inactive
+                        if (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) == 0):
+                            agent.ASTAR(agent.current_pos, check_agent.path[-1])
+                            agents_that_move[outer_agent_moving_index] = 1
 
-                    num_bad_conditions += 1
-                    #TODO add re-pathing because the goals have been swapped but no the goals
+                            check_agent.path = []
+                            agents_that_move[moving_index] = 0
 
-                # check for next-move collisions
-                # is there going to be a glance collision and has it not already been solved (one of the agents is paused)
-                elif ():
-                    # insert wait on one agent
-                    num_bad_conditions += 1
+                        # if they are paused for one turn, you pause too
+                        elif (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) > 0):
+                            agents_that_move[moving_index] = 0
 
-                # is there going to be a crash collision
-                elif (): #TODO will target swapping get rid of this?
-                    # they need to move or they need to swap targets
-                    num_bad_conditions += 1
+                    # is there going to be a collision where they move into the same spot
+                    if (agents_that_move[outer_agent_moving_index] == 1):
+                        if(agent.path[0] == check_agent.path[0]):
+                            num_bad_conditions += 1
+                            agents_that_move[outer_agent_moving_index] = 0
 
-                # is there a bottleneck collision forming
-                elif ():
-                    # berp
-                    num_bad_conditions += 1
+                    #***** CHECK FOR TARGET CHANGE IF BOTH AGENTS ARE ACTIVE
+                    if len(agent.path) > 0:
+
+                        # check for shared targets
+                        if (agent.goal == check_agent.goal):
+                            # find the furthest of the two agents and tell it to rediscover
+                            if (len(agent.path) > len(check_agent.path)):
+                                agent.discover()
+                            else:
+                                    check_agent.discover()
+                            num_bad_conditions += 1
+
+                        # check for target swapping, if two agents are closer to eachothers goals than their own
+                        if (Distance(agent.goal, check_agent.current_pos) < Distance(agent.goal, agent.current_pos)) and (Distance(check_agent.goal, agent.current_pos) < Distance(check_agent.goal, agent.current_pos)):
+                            temp_goal = agent.path[-1]
+                            agent.ASTAR(agent.current_node, check_agent.path[-1])
+                            check_agent.ASTAR(check_agent.current_node, temp_goal)
+                            num_bad_conditions += 1
+
+                moving_index += 1
+            outer_agent_moving_index += 1
 
         # if current solution looks good, finish loop
         if (num_bad_conditions == 0):
             ready_to_move = True
 
     # Move
-    change_queue = []
-    for agent in agents:
-        # queue up changes for updates to mazes
-        agent.move() # needs PATH variable!!
+    for cur_agent_index in range(len(agents)):
+        if (agents_that_move[cur_agent_index] == 1): # if agent is supposed to move this cycle
+            agents[cur_agent_index].move(agents[cur_agent_index].path)
 
-    # apply updates to the mazes
-    for change in change_queue:
-        for
 
 
 # GSOCycle()
 # Completes one cycle of the Glow-worm Swarm Optimization Algorithm
-def GSOCycle(agents, master_map):
+# TODO Implement this one
+# def GSOCycle(agents, master_map):
