@@ -1,4 +1,4 @@
-import Queue
+import queue
 from random import randint
 class Agent:
 	
@@ -11,7 +11,7 @@ class Agent:
 		#self.maze.undiscovered.remove(self.start)
 		self.path = []
 		self.goal = False
-		self.undiscovered = Queue.LifoQueue() #keep history of undiscovered nodes passed
+		self.undiscovered = queue.LifoQueue() #keep history of undiscovered nodes passed
 		
 	def move(self,path):
 		#print path
@@ -148,4 +148,8 @@ class Agent:
 		path.append(start)
 		self.path = path[::-1]
 		return self.path
+<<<<<<< HEAD
 		
+=======
+		#self.path = self.path[::-1]
+>>>>>>> 053fb05d142bf11476d7921fa7ecab34319e95c6
