@@ -8,7 +8,7 @@ class Agent:
 		self.current_pos = start.pos
 		self.current_node = start
 		self.start.set_discovered()
-		self.maze.undiscovered.remove(self.start)
+		#self.maze.undiscovered.remove(self.start)
 		self.path = []
 		self.goal = False
 		self.undiscovered = Queue.LifoQueue() #keep history of undiscovered nodes passed
@@ -86,16 +86,16 @@ class Agent:
 			#find the one that has the lowest f score
 			current = open_set[0]
 			for node in open_set:
-				if node.f_A <= current.f_A:
+				if node.f_A < current.f_A:
 					current = node
 					
 			open_set.remove(current)
 			closed_set.append(current)
-			
 					
 			#if you are at the end create the path 
 			if current == end:
-				return self.reconstruct(came_from,current)
+				#came_from.append(current)
+				return self.reconstruct(came_from,current,start,end)
 				
 			#create list of neighbors
 			neighbors = []
@@ -117,10 +117,9 @@ class Agent:
 				#if we computed a worse g_score dont bother
 				elif temp_g >= node.g_A:
 					continue
-				
 				#otherwise we found a part of the path
-				#if current not in came_from:
-				came_from.append(current)
+				if current not in came_from:
+					came_from.append(current)
 				node.g_A = temp_g
 				self.h_score(node,node,end)
 				self.f_score(node)
@@ -131,16 +130,22 @@ class Agent:
 		
 	def f_score(self,node):
 		node.f_A = node.g_A + node.h_A
+	
+	def reconstruct(self,came_from,current_node,start,end):
+		#came_from.remove(came_from[0])
+		path = []
+		came_from = came_from[::-1]
+		path.append(end)
+		last_node = end
+		while len(came_from) > 0:
+			for node in came_from:
+				if node.pos in last_node.edges.keys():
+					path.append(node)
+					last_node = node
+					break
+				else:
+					came_from.remove(node)
+		path.append(start)
+		self.path = path[::-1]
+		return self.path
 		
-	def reconstruct(self,came_from,current_node):
-		#print came_from
-		self.path = [current_node]
-		i = 0
-		while current_node in came_from:
-			current_node = came_from[i]
-			i += 1
-			self.path.append(current_node)
-			
-		return self.path
-		#self.path = self.path[::-1]
-		return self.path
