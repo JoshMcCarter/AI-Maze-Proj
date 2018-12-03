@@ -1,4 +1,4 @@
-import queue
+import Queue
 from random import randint
 class Agent:
 	
@@ -11,7 +11,7 @@ class Agent:
 		self.maze.undiscovered.remove(self.start)
 		self.path = []
 		self.goal = False
-		self.undiscovered = queue.LifoQueue() #keep history of undiscovered nodes passed
+		self.undiscovered = Queue.LifoQueue() #keep history of undiscovered nodes passed
 		
 	def move(self,path):
 		#print path
@@ -66,6 +66,10 @@ class Agent:
 		open_set = [start]
 		came_from = []
 		
+		for node in self.maze.nodes:
+			node.g_A = float('inf')
+			node.f_A = float('inf')
+		
 		#compute values for starting node
 		#g_score is the distance from the start
 		start.g_A = 0
@@ -82,16 +86,17 @@ class Agent:
 			#find the one that has the lowest f score
 			current = open_set[0]
 			for node in open_set:
-				if node.f_A < current.f_A:
+				if node.f_A <= current.f_A:
 					current = node
+					
+			open_set.remove(current)
+			closed_set.append(current)
+			
 					
 			#if you are at the end create the path 
 			if current == end:
 				return self.reconstruct(came_from,current)
 				
-			open_set.remove(current)
-			closed_set.append(current)
-			
 			#create list of neighbors
 			neighbors = []
 			for key1,key2 in current.edges:
@@ -103,7 +108,8 @@ class Agent:
 					continue
 					
 				#compute a g_score for potiential candidate
-				temp_g = current.g_A + current.edges[node.pos]
+				#temp_g = current.g_A + current.edges[node.pos]
+				temp_g = current.g_A + 1
 				
 				#if it hasnt been seen yet mark for discovery
 				if node not in open_set:
@@ -113,11 +119,12 @@ class Agent:
 					continue
 				
 				#otherwise we found a part of the path
+				#if current not in came_from:
 				came_from.append(current)
 				node.g_A = temp_g
 				self.h_score(node,node,end)
-				self.f_score(node) 
-		
+				self.f_score(node)
+				
 	#heuristic for the distance between two points, called manhattan distance
 	def h_score(self,node,a,b):
 		node.h_A = abs(a.pos[0] - b.pos[0])+abs(a.pos[1] - b.pos[1])
@@ -126,9 +133,14 @@ class Agent:
 		node.f_A = node.g_A + node.h_A
 		
 	def reconstruct(self,came_from,current_node):
+		#print came_from
 		self.path = [current_node]
-		for node in came_from:
-			self.path.append(node)
+		i = 0
+		while current_node in came_from:
+			current_node = came_from[i]
+			i += 1
+			self.path.append(current_node)
 			
+		return self.path
 		#self.path = self.path[::-1]
 		return self.path
