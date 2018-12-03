@@ -12,8 +12,8 @@ class Node:
 		self.agent_on = False
 		
 		#setup vars for A*
-		self.f_A = 0
-		self.g_A = 0
+		self.f_A = float('inf')
+		self.g_A = float('inf')
 		self.h_A = 0
 
 	def __str__(self):
