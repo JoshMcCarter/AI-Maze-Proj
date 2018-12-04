@@ -1,5 +1,5 @@
 //const GRID_SIZE = 4600000; //square centimeters
-const GRID_SIZE = 200000;
+const GRID_SIZE = 1600;
 var CUSTOM_rows = null;
 var CUSTOM_cols = null;
 
@@ -135,10 +135,13 @@ function generateOutline() {
 }
 
 
+function removeWarningMessage() {
+    document.getElementById('message').innerText = " ";
+}
 
-
-function drawRoom() {
+function drawMap() {
     var p = 5;
+    removeWarningMessage();
     //document.getElementById("canvas").rows = GRID.rows;
     //document.getElementById("canvas").cols = GRID.cols;
     var bw = GRID.rows;
@@ -188,7 +191,7 @@ function promptUser() {
 
 
 
-function printMap() {
+function printMap(filename) {
     var fs = require('fs');
     var room = "";
     var rows = GRID.rows;
@@ -203,21 +206,30 @@ function printMap() {
         }
         room += lineString + '\n';
     }
-    fs.writeFile('ite.txt', room, function (err) {
+    fs.writeFile(filename + '.txt', room, function (err) {
         console.log('Saved!');
       });
 }
 
-function roomGenerator() {
+function mapGenerator(numMaps) {
     promptUser();
-    generateOutline();
-    //drawRoom(); comment this out for txt file
-    printMap(); //comment printRoom() to visualize in html
+    
+    
+    //drawMap(); comment this out for txt file
+    for(var i = 1; i <= numMaps; i++) {
+        generateOutline();
+        num = i + 0; //for file naming generate file by blocks to not overwork procssor
+        currentFilename = FILE_PREFIX + num;
+        printMap(currentFilename); //comment printMap() to visualize in html
+        GRID = [];
+    }
     console.log("done");
 }
 
-roomGenerator();
+const NUM_MAPS = 1; //number of maps to generate
+const FILE_PREFIX = "tinymaze" + GRID_SIZE + "_";
 
+mapGenerator(NUM_MAPS)
 
 
 
