@@ -211,8 +211,8 @@ function printMap() {
 function roomGenerator() {
     promptUser();
     generateOutline();
-    //drawRoom();
-    printMap();
+    //drawRoom(); comment this out for txt file
+    printMap(); //comment printRoom() to visualize in html
     console.log("done");
 }
 
