@@ -6,6 +6,7 @@ from Node import Node
 from Maze import Maze
 from Agent import Agent
 from Swarm import PPSOCycle
+from UI import UserInterface                                            # add for UI
 
 
 def PrintAgent(agent, agent_num):
@@ -51,6 +52,7 @@ agent1 = Agent(node1,foo)
 agent2 = Agent(node5,foo)
 agents = [agent1, agent2]
 
+ui = UserInterface(foo, agents)                                            # add for ui
 print("Begin maze")
 print("Agent 1 location: ", agent1.current_pos)
 print("Agent 2 location: ", agent2.current_pos)
