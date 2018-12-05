@@ -13,6 +13,7 @@ class Maze:
     self.maze = {node.get_pos():node for node in self.nodes}
     self.edges = {node.get_pos():node.get_edges() for node in self.nodes}
     self.undiscovered = [node for node in self.nodes if node.get_discovered() == False]
+    self.debug = False
 
   def generate_edges(self):
     for node in self.nodes:
