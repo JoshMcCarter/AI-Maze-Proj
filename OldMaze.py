@@ -6,6 +6,7 @@ class Maze:
         self.generate_edges()
         self.edges = {node.get_pos(): node.get_edges() for node in nodes}
         self.undiscovered = [node for node in nodes if node.get_discovered() == False]
+        self.debug = False
 
     def generate_edges(self):
         for node in self.nodes:

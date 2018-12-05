@@ -5,7 +5,7 @@
 from Node import Node
 from OldMaze import Maze
 from Agent import Agent
-from Swarm import PPSOCycle
+from Swarm import PPSOCycle, EPSOCycle
 
 
 def PrintAgent(agent, agent_num):
@@ -53,6 +53,7 @@ node5.set_left(node4)
 nodes = [node1, node2, node3, node4, node5]
 
 foo = Maze(nodes)
+foo.debug = True
 agent1 = Agent(node1,foo)
 agent2 = Agent(node5,foo)
 agents = [agent1, agent2]
@@ -64,7 +65,7 @@ print("Agent 2 location: ", agent2.current_pos)
 
 while not check_win_condition(agents):
     input(">>> Press enter to continue")
-    PPSOCycle(agents)
+    EPSOCycle(agents, 5)
     PrintAgent(agents[0], 1)
     PrintAgent(agents[1], 2)
 
