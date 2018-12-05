@@ -7,6 +7,7 @@
 import random
 import sys
 import os
+import time
 from Maze import Maze
 from Swarm import PPSOCycle, EPSOCycle
 from Agent import Agent
@@ -142,8 +143,10 @@ def main(input_arguments):
     #     return 1
 
     # Run through program with various agents
-    for i in range(1, num_agents):
+    for i in range(1, int(num_agents)):
         run_maze(maze_filename, i, swarm_algorithm, debug)
 
 # Run function
+start_time = time.time()
 main(sys.argv)
+print("----------%s seconds----------" % (time.time() - start_time))
