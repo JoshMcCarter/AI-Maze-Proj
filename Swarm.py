@@ -345,7 +345,7 @@ def PPSOCycle(agents):
 
         # save first count of bad conditions for return
         if first_run is True:
-            first_run is False
+            first_run = False
 
         # if current solution looks good, finish loop
         if (num_bad_conditions == 0):
@@ -359,4 +359,4 @@ def PPSOCycle(agents):
             print("Moving agent", cur_agent_index)
             agents[cur_agent_index].move(agents[cur_agent_index].path)
 
-    return returnVal
+    return report
