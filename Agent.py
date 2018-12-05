@@ -75,6 +75,7 @@ class Agent:
         for node in self.maze.nodes:
             node.g_A = float('inf')
             node.f_A = float('inf')
+            node.parent = None
 
         #compute values for starting node
         #g_score is the distance from the start
@@ -101,7 +102,7 @@ class Agent:
             #if you are at the end create the path
             if current == end:
                 #came_from.append(current)
-                return self.reconstruct(came_from,current,start,end)
+                return self.reconstruct(current,start)
 
             #create list of neighbors
             neighbors = []
@@ -110,9 +111,10 @@ class Agent:
 
             for node in neighbors:
                 #just keep going if already tested
+                
                 if node in closed_set:
                     continue
-
+                node.parent = current
                 #compute a g_score for potiential candidate
                 #temp_g = current.g_A + current.edges[node.pos]
                 temp_g = current.g_A + 1
@@ -126,6 +128,7 @@ class Agent:
                 #otherwise we found a part of the path
                 if current not in came_from:
                     came_from.append(current)
+                    
                 node.g_A = temp_g
                 self.h_score(node,node,end)
                 self.f_score(node)
@@ -136,33 +139,15 @@ class Agent:
 
     def f_score(self,node):
         node.f_A = node.g_A + node.h_A
-
-    def reconstruct(self,came_from,current_node,start,end):
+        
+    def reconstruct(self,current_node,start):
         #came_from.remove(came_from[0])
-        path = []
-        came_from = came_from[::-1]
-        path.append(end)
-
-        last_node = end
-        while len(came_from) > 0:
-            for node in came_from:
-                if node.pos in last_node.edges.keys():
-                    path.append(node)
-                    last_node = node
-                    break
-                else:
-                    came_from.remove(node)
-        path.append(start)
-
-        # remove duplicates
-        final_path = []
-        for node in path:
-            if node not in final_path:
-                final_path.append(node)
-
-        # remove current node
-        if self.current_node in final_path:
-            final_path.remove(self.current_node)
-
-        self.path = final_path[::-1]
+        path = [current_node]
+        current_node = current_node.parent
+        while current_node is not None and current_node != start:
+            #print("bussy")
+            path.append(current_node)
+            current_node = current_node.parent
+            
+        self.path = path[::-1]
         return self.path
