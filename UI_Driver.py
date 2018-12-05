@@ -28,15 +28,15 @@ def main():
     # input_filename = "Maze_Generation\\Mazes\\tinymazes\\tinymaze1600_1.txt"
     # maze1 = Maze(input_filename)
 
-    node1 = Node(False, False, False, False, (0, 0), True)
+    node1 = Node(False, False, False, False, (0, 2), True)
     node2 = Node(False, False, False, False, (0, 1), False)
-    node3 = Node(False, False, False, False, (0, 2), False)
-    node4 = Node(False, False, False, False, (1, 2), False)
-    node5 = Node(False, False, False, False, (2, 2), True)
+    node3 = Node(False, False, False, False, (0, 0), False)
+    node4 = Node(False, False, False, False, (1, 0), False)
+    node5 = Node(False, False, False, False, (2, 0), True)
     node6 = Node(False, False, False, False, (2, 1), False)
-    node7 = Node(False, False, False, False, (2, 0), False)
-    node8 = Node(False, False, False, False, (1, 0), False)
-    #node9 = Node(False, False, False, False, (1, 1), False)
+    node7 = Node(False, False, False, False, (2, 2), False)
+    node8 = Node(False, False, False, False, (1, 2), False)
+    node9 = Node(False, False, False, False, (1, 1), False)
 
     node1.set_up(node2)
     node1.set_right(node8)
@@ -55,10 +55,10 @@ def main():
     node7.set_up(node6)
     node8.set_right(node7)
     node8.set_left(node1)
-    #node4.set_down(node9)
-    #node9.set_up(node4)
+    node4.set_down(node9)
+    node9.set_up(node4)
 
-    nodes = [node1, node2, node3, node4, node5, node6, node7, node8 ]
+    nodes = [node1, node2, node3, node4, node5, node6, node7, node8, node9]
     maze1 = Maze(nodes)
 
     # make agents here

@@ -157,8 +157,8 @@ class UserInterface:
         for k in range(0, self.num_agents):
             for i in range(0, 5):
                 for j in range(0, 5):
-                    x = agent.current_pos[0]
-                    y = agent.current_pos[1]
+                    x = agents[k].current_pos[0]
+                    y = agents[k].current_pos[1]
                     x = x + i - 2
                     y = y + j - 2
                     if x < 0:
@@ -184,9 +184,14 @@ class UserInterface:
                     self.agents_labels[k][i][j] = \
                         Label(self.agents_view[k], image=self.photo_cloud, width=50, height=50)
                     self.agents_labels[k][i][j].grid(row=j, column=i)
- #                   if self.labels[x][y].background == "green":
+
                     for node in nodes:
                         if node.discovered:
+                            print(node.pos)
+                            print(node.up)
+                            print(node.down)
+                            print(node.left)
+                            print(node.right)
                             if node.pos[0] == x and node.pos[1] == y:
                                 if node.up:
                                     if node.down:
