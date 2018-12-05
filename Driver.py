@@ -39,7 +39,7 @@ def check_win_condition(agents):
     return True
 
 
-def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug):
+def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug, radius=0):
 
     # load maze from selected file
     print("Loading Maze from file", maze_filename, "...")
@@ -79,8 +79,8 @@ def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug):
 
         if swarm_algorithm == "PPSO":
             cycle_statistics.append(PPSOCycle(agents))
-        # else:  # use EPSOCycle
-        #     cycle_statistics.append(EPSOCycle(agents))
+        else:  # use EPSOCycle
+            cycle_statistics.append(EPSOCycle(agents, radius))
         num_cycles += 1
 
     # End of loop
@@ -98,53 +98,60 @@ def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug):
                     print("    Location:", incident[2])
 
     # Write statistics to output file
-    # Line Format: num_agents,num_nodes,cycle_num,num_undiscovered,incident_type,incident_location
+    # Line Format: num_agents,radius,num_nodes,cycle_num,num_undiscovered,incident_type,incident_location
     output_filename = maze_filename.split(".")[0] + "_OUTPUT.csv"
     print("Appending cycle statistics to output file:", output_filename)
     out_file_handle = open(output_filename, 'a')
     for index_val in range(len(cycle_statistics)):
         for incident in cycle_statistics[index_val]:
             if incident[0] == "SWAPPING_TARGETS":
-                out_file_handle.write(str(num_agents) + "," + str(len(maze.nodes)) + "," + str(index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(incident[1]) + "\"" + str(incident[2]) + "\"\n")
+                out_file_handle.write(str(num_agents) + "," + str(radius) + "," + str(len(maze.nodes)) + "," + str(index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(incident[1]) + "\"" + str(incident[2]) + "\"\n")
             else:
-                out_file_handle.write(str(num_agents) + "," + str(len(maze.nodes)) + "," + str(index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(incident[1]) + "\"\n")
+                out_file_handle.write(str(num_agents) + "," + str(radius) + "," + str(len(maze.nodes)) + "," + str(index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(incident[1]) + "\"\n")
     out_file_handle.write("TOTAL_CYCLES," + str(num_cycles) + "\n")
     out_file_handle.close()
     # END OF FUNCTION
 
 
 # Driver usage:
-# python Driver.py maze_file_path max_agents swarm_algorithm
-# python Driver.py maze_file_path max_agents swarm_algorithm debug
+# python Driver.py maze_file_path max_agents PPSO
+# python Driver.py maze_file_path max_agents EPSO radius
+# python Driver.py maze_file_path max_agents swarm [radius] debug
 def main(input_arguments):
 
     # verify number of command line arguments
-    if len(input_arguments) == 4:
-        debug = False
-    elif len(input_arguments) == 5:
+    if input_arguments[-1].upper == "DEBUG":
         debug = True
     else:
-        print("Invalid number of input arguments. See README for details.")
-        return 1
+        debug = False
 
     # check swarm algorithm variable
     swarm_algorithm = input_arguments[3].upper()
-    if swarm_algorithm != "PPSO":
+    if swarm_algorithm != "PPSO" or swarm_algorithm != "EPSO":
         print("Invalid Swarm algorithm. Choices are: PPSO, EPSO")
         return 1
+
+    if swarm_algorithm == "EPSO":
+        radius = int(input_arguments[4])
+    else:
+        radius = 0
 
     # get number of agents:
     num_agents = input_arguments[2]
 
     # verify maze file exists
     maze_filename = input_arguments[1]
-    # if not os.path.isfile(maze_filename):
-    #     print("Invalid maze file. File not found!")
-    #     return 1
 
     # Run through program with various agents
-    for i in range(1, int(num_agents)):
-        run_maze(maze_filename, i, swarm_algorithm, debug)
+    if swarm_algorithm == "PPSO":
+        for i in range(1, int(num_agents)):
+            run_maze(maze_filename, i, swarm_algorithm, debug)
+
+    else:
+        for i in range(1, int(num_agents)):
+            for r in range(2, int(radius)):
+                run_maze(maze_filename, i, swarm_algorithm, debug, radius)
+
 
 # Run function
 start_time = time.time()

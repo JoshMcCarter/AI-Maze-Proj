@@ -27,7 +27,7 @@ def Distance(node_a, node_b):
 #   radius: max distance between agents allowed, minimum value required is 2 units, for collision checking
 def EPSOCycle(agents, radius):
     ready_to_move = False
-
+    report = []
     agents_that_move = [1] * len(agents)
 
     # Check for agents completed with their paths,
@@ -35,7 +35,6 @@ def EPSOCycle(agents, radius):
     for agent_index in range(len(agents)):
         if ((len(agents[agent_index].path) == 0) or (agents[agent_index].goal == agents[agent_index].current_node)):
             agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
-            print(agents[agent_index].path)
 
             if agents[agent_index].path == False:
                 # nothing in agent's queue, grab from large pool
@@ -52,15 +51,16 @@ def EPSOCycle(agents, radius):
                         agents[agent_index].undiscovered.put(temp_goal)
                         agents[agent_index].maze.undiscovered.append(temp_goal)
                         agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
-                        print(agents[agent_index].path)
 
                 else:
                     # deactivate agent, nowhere for it to go
                     agents[agent_index].path = []
                     agents[agent_index].goal = agents[agent_index].current_node
-                    print("Deactivating agent", agent_index)
+                    if agents[0].maze.debug is True:
+                        print("Deactivating agent", agent_index)
                     agents_that_move[agent_index] = 0
 
+    first_run = True
     # Conditional loop, loops until best solution for all agents is found
     while (ready_to_move == False):
         num_bad_conditions = 0  # number of issues with the next cycle to resolve
@@ -76,6 +76,7 @@ def EPSOCycle(agents, radius):
 
             # Only perform checks against agents in nearby radius
             for check_agent in nearby_agents:
+
                 # only look at agent if it is active and is not paused and not itself
                 if (agent != check_agent) and (len(check_agent.path) > 0) and (agents_that_move[moving_index] == 1):
 
@@ -84,16 +85,19 @@ def EPSOCycle(agents, radius):
 
                         # check for shared targets
                         if (agent.goal == check_agent.goal):
-                            print("Duplicate targets!")
+                            if agents[0].maze.debug is True:
+                                print("Duplicate targets!")
+                            if first_run is True:
+                                report.append(("DUPLICATE_TARGETS", agent.goal.pos))
                             # find the furthest of the two agents and tell it to rediscover
                             if (len(agent.path) > len(check_agent.path)):
-                                print("Path length case 1")
                                 agent.path = agent.discover(agent.current_node)
                                 if agent.path == False:
                                     # nothing in agent's queue, grab from large pool
 
                                     if len(agent.maze.undiscovered) > 0:
-                                        print("Assigning new path to agent")
+                                        if agents[0].maze.debug is True:
+                                            print("Assigning new path to agent")
                                         agent.undiscovered.put(agent.maze.undiscovered[0])
                                         agent.path = agent.discover(agent.current_node)
 
@@ -101,16 +105,17 @@ def EPSOCycle(agents, radius):
                                         # deactivate agent, nowhere for it to go
                                         agent.path = []
                                         agent.goal = agent.current_node
-                                        print("Deactivating agent", outer_agent_moving_index)
+                                        if agents[0].maze.debug is True:
+                                            print("Deactivating agent", outer_agent_moving_index)
                                         agents_that_move[outer_agent_moving_index] = 0
                             else:
-                                print("Path length case 2")
                                 check_agent.path = check_agent.discover(check_agent.current_node)
                                 if check_agent.path == False:
                                     # nothing in agent's queue, grab from large pool
 
                                     if len(check_agent.maze.undiscovered) > 0:
-                                        print("Assigning new path to agent")
+                                        if agents[0].maze.debug is True:
+                                            print("Assigning new path to agent")
                                         check_agent.undiscovered.put(check_agent.maze.undiscovered[0])
                                         check_agent.path = check_agent.discover(check_agent.current_node)
 
@@ -118,7 +123,8 @@ def EPSOCycle(agents, radius):
                                         # deactivate agent, nowhere for it to go
                                         check_agent.path = []
                                         check_agent.goal = check_agent.current_node
-                                        print("Deactivating agent", moving_index)
+                                        if agents[0].maze.debug is True:
+                                            print("Deactivating agent", moving_index)
                                         agents_that_move[moving_index] = 0
 
                             num_bad_conditions += 1
@@ -127,7 +133,10 @@ def EPSOCycle(agents, radius):
                         if (Distance(agent.goal, check_agent.current_node) < Distance(agent.goal, agent.current_node)) \
                                 and (Distance(check_agent.goal, agent.current_node) < Distance(check_agent.goal,
                                                                                                check_agent.current_node)):
-                            print("Swapping Targets")
+                            if agents[0].maze.debug is True:
+                                print("Swapping Targets")
+                            if first_run is True:
+                                report.append(("SWAPPING_TARGETS", agent.goal.pos, check_agent.goal.pos))
                             temp_goal = agent.goal
                             agent.goal = check_agent.goal
                             agent.path = agent.ASTAR(agent.current_node, agent.goal)
@@ -138,13 +147,17 @@ def EPSOCycle(agents, radius):
                     # ***** CHECK FOR COLLISIONS
                     # is there someone in the next node
                     if len(check_agent.path) > 0 and (check_agent.path[0].pos == agent.current_pos):
-                        print("Someone is in the next node")
+                        if agents[0].maze.debug is True:
+                            print("Someone is in the next node")
 
-                        # if they intend to move, go ahead
-                        # DON'T NEED TO MODIFY ANYTHING
+                            # if they intend to move, go ahead
+                            # DON'T NEED TO MODIFY ANYTHING
                         # if they are paused due to inactivity, swap targets with them, you become inactive
                         if (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) == 0):
-                            print("Other agent inactive, swapping targets with them")
+                            if agents[0].maze.debug is True:
+                                print("Other agent inactive, swapping targets with them")
+                            if first_run is True:
+                                report.append(("INACTIVE_AGENT_IN_NEXT_NODE", agent.current_pos))
                             agent.goal = check_agent.goal
                             agent.ASTAR(agent.current_node, check_agent.goal)
                             check_agent.goal = check_agent.current_node
@@ -157,7 +170,10 @@ def EPSOCycle(agents, radius):
 
                         # if they are paused for one turn, you pause too
                         elif (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) > 0):
-                            print("Agent is pausing, pausing this agent too")
+                            if agents[0].maze.debug is True:
+                                print("Agent is pausing, pausing this agent too")
+                            if first_run is True:
+                                report.append(("PAUSED_AGENT_IN_NEXT_NODE", agent.current_pos))
                             agents_that_move[moving_index] = 0
 
                             num_bad_conditions += 1
@@ -166,29 +182,44 @@ def EPSOCycle(agents, radius):
                     if (agents_that_move[outer_agent_moving_index] == 1) and (len(agent.path) > 0) and (
                         len(check_agent.path) > 0):
                         if (agent.path[0] == check_agent.path[0]):
-                            print("collision imminent")
+                            if agents[0].maze.debug is True:
+                                print("collision imminent")
+                            if first_run is True:
+                                report.append(("COLLISION_EMMINENT_PAUSING_AGENT", agent.path[0].pos))
                             num_bad_conditions += 1
                             agents_that_move[outer_agent_moving_index] = 0
 
-
                 moving_index += 1
             outer_agent_moving_index += 1
+        if agents[0].maze.debug is True:
+            print("num_bad_conditions: ", num_bad_conditions)
+
+        # save first count of bad conditions for return
+        if first_run is True:
+            first_run = False
 
         # if current solution looks good, finish loop
         if (num_bad_conditions == 0):
             ready_to_move = True
 
-    print("AGENTS THAT MOVE", agents_that_move)
+    if agents[0].maze.debug is True:
+        print("AGENTS THAT MOVE", agents_that_move)
+
+    # count number of agents that move in this cycle
+    total = 0
+    for i in agents_that_move:
+        if i == 1:
+            total += 1
+    report.append(("AGENTS_THAT_MOVE_THIS_CYCLE", total))
 
     # Move
     for cur_agent_index in range(len(agents)):
         if (agents_that_move[cur_agent_index] == 1):  # if agent is supposed to move this cycle
-            print("PATH")
-            for i in agents[cur_agent_index].path:
-                print("<", i.pos, "> ", end='')
-            print("")
-            print("Moving agent", cur_agent_index)
+            if agents[0].maze.debug is True:
+                print("Moving agent", cur_agent_index)
             agents[cur_agent_index].move(agents[cur_agent_index].path)
+
+    return report
 
 
 # PPSOCycle()
