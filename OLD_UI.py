@@ -1,8 +1,68 @@
 from tkinter import *
 from Swarm import PPSOCycle
 
+
+def print_agent(agent, agent_num):
+    print("*** AGENT", agent_num)
+    print("  Current Position:", agent.current_pos)
+    if len(agent.path) > 0:
+        print("  Path: ", end='')
+        for i in agent.path:
+            print("<" + str(i.pos) + "> ", end='')
+        print("")
+    else:
+        print("  Path: NONE")
+    if agent.goal:
+        print("  Goal:", agent.goal.pos)
+    print("")
+
+
+def check_win_condition(agents):
+    # check if there are undiscovered nodes
+    if len(agents[0].maze.undiscovered) > 0:
+        return False
+
+    # check if all undiscovered nodes have been reached
+    for agent in agents:
+        if agent.goal != agent.current_node:
+            return False
+
+    return True
+
+
+def write_to_file(maze, cycle_statistics, num_agents, num_cycles, maze_filename):
+    # if debug enabled, print cycle statistics
+    if maze.debug is True:
+        for index_val in range(len(cycle_statistics)):
+            print("\n >>> CYCLE", index_val + 1, "REPORT:")
+            for incident in cycle_statistics[index_val]:
+                print("* EVENT:")
+                print("    Type:", incident[0])
+                print("    Location:", incident[1])
+                if incident[0] == "SWAPPING_TARGETS":
+                    print("    Location:", incident[2])
+
+    # Write statistics to output file
+    # Line Format: num_agents,radius,num_nodes,cycle_num,num_undiscovered,incident_type,incident_location
+    output_filename = maze_filename.split(".")[0] + "_OUTPUT.csv"
+    print("Appending cycle statistics to output file:", output_filename)
+    out_file_handle = open(output_filename, 'a')
+    for index_val in range(len(cycle_statistics)):
+        for incident in cycle_statistics[index_val]:
+            if incident[0] == "SWAPPING_TARGETS":
+                out_file_handle.write(str(num_agents) + "," + str(0) + "," + str(len(maze.nodes)) + "," + str(
+                    index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(
+                    incident[1]) + "\"" + str(incident[2]) + "\"\n")
+            else:
+                out_file_handle.write(str(num_agents) + "," + str(0) + "," + str(len(maze.nodes)) + "," + str(
+                    index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(
+                    incident[1]) + "\"\n")
+    out_file_handle.write("TOTAL_CYCLES," + str(num_cycles) + "\n")
+    out_file_handle.close()
+
+
 class UserInterface:
-    def __init__(self, maze, agents):
+    def __init__(self, maze, agents, cycle_statistics, filename):
         self.width = 500
         self.root = Tk()
         self.root.title("Main Map View")
@@ -22,24 +82,67 @@ class UserInterface:
         self.one_step_flag = 0
         self.start_flag = False
         self.pause_flag = False
+        self.agents = agents
+        self.cycle_statistics = cycle_statistics
+        self.num_cycles = 0
+        self.win_game = False
 
 
         def one_step():
             print("one step")
-            PPSOCycle(agents)
-            self.update(maze, agents)
+            if self.win_game is False:
+                self.cycle_statistics.append(PPSOCycle(self.agents))
+                self.num_cycles += 1
+            self.update(maze, self.agents)
             self.one_step_flag += 1
             self.pause_flag = False
             self.start_flag = False
+
+            if maze.debug is True:
+                for x in range(self.num_agents):
+                    print_agent(agents[x], x)
+
+                print("Remaining Undiscovered Nodes:", end='')
+                for temp_val in maze.undiscovered:
+                    print(temp_val.pos, end='')
+
+                print("")
+
+            if check_win_condition(self.agents) is True:
+                print("\n *** Maze Discovery Complete *** ")
+                self.win_game = True
+                write_to_file(maze, self.cycle_statistics, self.agents, self.num_cycles, filename)
 
         def start():
             print("start")
             self.start_flag = True
             self.pause_flag = False
             self.one_step_flag = 0
-            while self.start_flag:
-                PPSOCycle(agents)
-                self.update(maze, agents)
+            while not check_win_condition(agents) and self.pause_flag is False:
+
+                # debug instructions for loop
+                if maze.debug is True:
+                    for x in range(self.num_agents):
+                        print_agent(agents[x], x)
+
+                    print("Remaining Undiscovered Nodes:", end='')
+                    for temp_val in maze.undiscovered:
+                        print(temp_val.pos, end='')
+
+                    print("")
+
+                if self.win_game is False:
+                    self.cycle_statistics.append(PPSOCycle(self.agents))
+                    self.num_cycles += 1
+
+                self.update(maze, self.agents)
+
+                self.num_cycles += 1
+
+            if check_win_condition(self.agents) is True:
+                print("\n *** Maze Discovery Complete *** ")
+                self.win_game = True
+                write_to_file(maze, self.cycle_statistics, self.agents, self.num_cycles, filename)
 
         def pause():
             print("pause")
@@ -134,13 +237,15 @@ class UserInterface:
         self.root.mainloop()
 
     def update(self, maze, agents):
+        print("updata called")
 
         nodes = maze.nodes
 
         for node in nodes:
             if node.discovered:
+                print(node.pos)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny] = \
-                    Label(self.left_frame, image=self.photo_empty, bg="green", width=self.size, height=self.size)
+                    Label(self.left_frame, image=self.photo_empty, bg="green", width=50, height=50)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny]. \
                     grid(row=node.pos[1] - self.miny, column=node.pos[0] - self.minx)
         for agent in agents:
@@ -185,6 +290,11 @@ class UserInterface:
 
                     for node in nodes:
                         if node.discovered:
+                            print(node.pos)
+                            print(node.up)
+                            print(node.down)
+                            print(node.left)
+                            print(node.right)
                             if node.pos[0] == x and node.pos[1] == y:
                                 if node.up:
                                     if node.down:

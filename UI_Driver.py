@@ -3,87 +3,62 @@
 # UI Enabled Driver
 
 # Imports
-from Node import Node
-from OldMaze import Maze
+from Maze import Maze
 from Agent import Agent
 from Swarm import PPSOCycle
-from UI import UserInterface
+from OLD_UI import UserInterface
 import random
-
-def check_win_condition(agents):
-    # check if there are undiscovered nodes
-    if len(agents[0].maze.undiscovered) > 0:
-        return False
-
-    # check if all undiscovered nodes have been reached
-    for agent in agents:
-        if agent.goal != agent.current_node:
-            return False
-
-    return True
+import sys
 
 
-def main():
-    num_agents = 2
-    # input_filename = "Maze_Generation\\Mazes\\tinymazes\\tinymaze1600_1.txt"
-    # maze1 = Maze(input_filename)
+def main(input_arguments):
+    # verify number of command line arguments
+    if input_arguments[-1].upper() == "DEBUG":
+        debug = True
+    else:
+        debug = False
 
-    node1 = Node(False, False, False, False, (0, 0), True)
-    node2 = Node(False, False, False, False, (0, 1), False)
-    node3 = Node(False, False, False, False, (0, 2), False)
-    node4 = Node(False, False, False, False, (1, 2), False)
-    node5 = Node(False, False, False, False, (2, 2), True)
-    node6 = Node(False, False, False, False, (2, 1), False)
-    node7 = Node(False, False, False, False, (2, 0), False)
-    node8 = Node(False, False, False, False, (1, 0), False)
-    node9 = Node(False, False, False, False, (1, 1), False)
+    # check swarm algorithm variable
+    swarm_algorithm = input_arguments[3].upper()
+    if swarm_algorithm != "PPSO" and swarm_algorithm != "EPSO":
+        print("Invalid Swarm algorithm. Choices are: PPSO, EPSO")
+        return 1
 
-    node1.set_up(node2)
-    node1.set_right(node8)
-    node2.set_down(node1)
+    if swarm_algorithm == "EPSO":
+        radius = int(input_arguments[4])
+    else:
+        radius = 0
 
-    node2.set_up(node3)
-    node3.set_down(node2)
-    node3.set_right(node4)
-    node4.set_left(node3)
-    node4.set_right(node5)
-    node5.set_left(node4)
-    node5.set_down(node6)
-    node6.set_up(node5)
-    node6.set_down(node7)
-    node7.set_left(node8)
-    node7.set_up(node6)
-    node8.set_right(node7)
-    node8.set_left(node1)
-    node4.set_down(node9)
-    node9.set_up(node4)
+    # get number of agents:
+    num_agents = input_arguments[2]
 
-    nodes = [node1, node2, node3, node4, node5, node6, node7, node8, node9]
+    # verify maze file exists
+    maze_filename = input_arguments[1]
 
-    maze1 = Maze(nodes)
+    # load maze from selected file
+    print("Loading Maze from file", maze_filename, "...")
+    maze = Maze(maze_filename)
+    maze.debug = debug
 
     # make agents here
     agents = []
-    for x in range(num_agents):
-        random_node = random.choice(maze1.undiscovered)  # select random node
-        maze1.undiscovered.remove(random_node)
-        agents.append(Agent(random_node, maze1))
+    for x in range(int(num_agents)):
+        random_node = random.choice(maze.undiscovered)  # select random node
+        maze.undiscovered.remove(random_node)
+        agents.append(Agent(random_node, maze))
+        if maze.debug is True:
+            print("    Agent", x, "initial location:", random_node.pos)
 
     # make UI here
-    ui = UserInterface(maze1, agents)
-    print("Done setting up UI")
+    cycle_statistics = []
 
-    # main loop
-    while not check_win_condition(agents):
+    # call UI
+    ui = UserInterface(maze, agents, cycle_statistics, maze_filename)
 
-        if ui.one_step_flag > 0 and ui.pause_flag is False and ui.start_flag is True:
-            PPSOCycle(agents)
-            ui.update(maze1, agents)
-            ui.one_step_flag -= 1
-
-        if ui.start_flag is True and ui.pause_flag is False:
-            PPSOCycle(agents)
-            ui.update(maze1, agents)
+# End of loop
+    print("\n *** Maze Discovery Complete *** ")
 
 
-main()
+# CHANGE VALUES HERE FOR CHANGE OF WHAT IT DOES
+main(["UI_Driver.py", "Maze_Generation\Mazes\\tinymazes\\tinymaze1600_2.txt", "2", "PPSO"])
+

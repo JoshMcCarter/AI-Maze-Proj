@@ -23,7 +23,8 @@ def print_agent(agent, agent_num):
         print("")
     else:
         print("  Path: NONE")
-    print("  Goal:", agent.goal.pos)
+    if agent.goal:
+        print("  Goal:", agent.goal.pos)
     print("")
 
 
@@ -120,14 +121,14 @@ def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug, radius=0)
 def main(input_arguments):
 
     # verify number of command line arguments
-    if input_arguments[-1].upper == "DEBUG":
+    if input_arguments[-1].upper() == "DEBUG":
         debug = True
     else:
         debug = False
 
     # check swarm algorithm variable
     swarm_algorithm = input_arguments[3].upper()
-    if swarm_algorithm != "PPSO" or swarm_algorithm != "EPSO":
+    if swarm_algorithm != "PPSO" and swarm_algorithm != "EPSO":
         print("Invalid Swarm algorithm. Choices are: PPSO, EPSO")
         return 1
 
@@ -154,6 +155,6 @@ def main(input_arguments):
 
 
 # Run function
-start_time = time.time()
-main(sys.argv)
-print("----------%s seconds----------" % (time.time() - start_time))
+#start_time = time.time()
+#main(sys.argv)
+#print("----------%s seconds----------" % (time.time() - start_time))
