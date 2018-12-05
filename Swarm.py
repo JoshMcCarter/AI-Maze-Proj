@@ -33,30 +33,31 @@ def EPSOCycle(agents, radius):
     # Check for agents completed with their paths,
     # ensures every agent has a path if there are enough undiscovered locations
     for agent_index in range(len(agents)):
-        if ((len(agents[agent_index].path) == 0) or (agents[agent_index].goal == agents[agent_index].current_node)) and len(agents[agent_index].maze.undiscovered) > 0:
+        if ((len(agents[agent_index].path) == 0) or (agents[agent_index].goal == agents[agent_index].current_node)):
             agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
-
             print(agents[agent_index].path)
 
             if agents[agent_index].path == False:
-                # nothing in agent's queue, grab from nearby agent
+                # nothing in agent's queue, grab from large pool
 
-                # build list of nearby agents
                 nearby_agents = []
                 for agent_temp in agents:
                     if Distance(agents[agent_index].current_node, agent_temp.current_node) < radius:
                         nearby_agents.append(agent_temp)
 
                 index_val = 0
-                while(agents[agent_index].path == False) and (index_val < len(nearby_agents)):
+                while (agents[agent_index].path == False) and (index_val < len(nearby_agents)):
                     if not nearby_agents[index_val].undiscovered.empty():
                         temp_goal = nearby_agents[index_val].undiscovered.get()
                         agents[agent_index].undiscovered.put(temp_goal)
+                        agents[agent_index].maze.undiscovered.append(temp_goal)
                         agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
+                        print(agents[agent_index].path)
 
                 else:
                     # deactivate agent, nowhere for it to go
                     agents[agent_index].path = []
+                    agents[agent_index].goal = agents[agent_index].current_node
                     print("Deactivating agent", agent_index)
                     agents_that_move[agent_index] = 0
 
@@ -78,32 +79,6 @@ def EPSOCycle(agents, radius):
                 # only look at agent if it is active and is not paused and not itself
                 if (agent != check_agent) and (len(check_agent.path) > 0) and (agents_that_move[moving_index] == 1):
 
-                    # ***** CHECK FOR COLLISIONS
-                    # is there someone in the next node
-                    if (check_agent.path[0].pos == agent.current_pos):
-                        print("Someone is in the next node")
-                        num_bad_conditions += 1
-                        # if they intend to move, go ahead
-                        # DON'T NEED TO MODIFY ANYTHING
-                        # if they are paused due to inactivity, swap targets with them, you become inactive
-                        if (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) == 0):
-                            agent.ASTAR(agent.current_pos, check_agent.goal)
-                            agents_that_move[outer_agent_moving_index] = 1
-
-                            check_agent.path = []
-                            agents_that_move[moving_index] = 0
-
-                        # if they are paused for one turn, you pause too
-                        elif (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) > 0):
-                            agents_that_move[moving_index] = 0
-
-                    # is there going to be a collision where they move into the same spot
-                    if (agents_that_move[outer_agent_moving_index] == 1):
-                        if (agent.path[0] == check_agent.path[0]):
-                            print("collision imminent")
-                            num_bad_conditions += 1
-                            agents_that_move[outer_agent_moving_index] = 0
-
                     # ***** CHECK FOR TARGET CHANGE IF BOTH AGENTS ARE ACTIVE
                     if len(agent.path) > 0:
 
@@ -112,21 +87,89 @@ def EPSOCycle(agents, radius):
                             print("Duplicate targets!")
                             # find the furthest of the two agents and tell it to rediscover
                             if (len(agent.path) > len(check_agent.path)):
+                                print("Path length case 1")
                                 agent.path = agent.discover(agent.current_node)
+                                if agent.path == False:
+                                    # nothing in agent's queue, grab from large pool
+
+                                    if len(agent.maze.undiscovered) > 0:
+                                        print("Assigning new path to agent")
+                                        agent.undiscovered.put(agent.maze.undiscovered[0])
+                                        agent.path = agent.discover(agent.current_node)
+
+                                    else:
+                                        # deactivate agent, nowhere for it to go
+                                        agent.path = []
+                                        agent.goal = agent.current_node
+                                        print("Deactivating agent", outer_agent_moving_index)
+                                        agents_that_move[outer_agent_moving_index] = 0
                             else:
+                                print("Path length case 2")
                                 check_agent.path = check_agent.discover(check_agent.current_node)
+                                if check_agent.path == False:
+                                    # nothing in agent's queue, grab from large pool
+
+                                    if len(check_agent.maze.undiscovered) > 0:
+                                        print("Assigning new path to agent")
+                                        check_agent.undiscovered.put(check_agent.maze.undiscovered[0])
+                                        check_agent.path = check_agent.discover(check_agent.current_node)
+
+                                    else:
+                                        # deactivate agent, nowhere for it to go
+                                        check_agent.path = []
+                                        check_agent.goal = check_agent.current_node
+                                        print("Deactivating agent", moving_index)
+                                        agents_that_move[moving_index] = 0
+
                             num_bad_conditions += 1
 
                         # check for target swapping, if two agents are closer to eachothers goals than their own
-                        if (Distance(agent.goal, check_agent.current_node) < Distance(agent.goal,
-                                                                                      agent.current_node)) and (
-                            Distance(check_agent.goal, agent.current_node) < Distance(check_agent.goal,
-                                                                                      agent.current_node)):
+                        if (Distance(agent.goal, check_agent.current_node) < Distance(agent.goal, agent.current_node)) \
+                                and (Distance(check_agent.goal, agent.current_node) < Distance(check_agent.goal,
+                                                                                               check_agent.current_node)):
                             print("Swapping Targets")
                             temp_goal = agent.goal
-                            agent.path = agent.ASTAR(agent.current_node, check_agent.goal)
+                            agent.goal = check_agent.goal
+                            agent.path = agent.ASTAR(agent.current_node, agent.goal)
                             check_agent.path = check_agent.ASTAR(check_agent.current_node, temp_goal)
+                            check_agent.goal = temp_goal
                             num_bad_conditions += 1
+
+                    # ***** CHECK FOR COLLISIONS
+                    # is there someone in the next node
+                    if len(check_agent.path) > 0 and (check_agent.path[0].pos == agent.current_pos):
+                        print("Someone is in the next node")
+
+                        # if they intend to move, go ahead
+                        # DON'T NEED TO MODIFY ANYTHING
+                        # if they are paused due to inactivity, swap targets with them, you become inactive
+                        if (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) == 0):
+                            print("Other agent inactive, swapping targets with them")
+                            agent.goal = check_agent.goal
+                            agent.ASTAR(agent.current_node, check_agent.goal)
+                            check_agent.goal = check_agent.current_node
+                            agents_that_move[outer_agent_moving_index] = 1
+
+                            check_agent.path = []
+                            agents_that_move[moving_index] = 0
+
+                            num_bad_conditions += 1
+
+                        # if they are paused for one turn, you pause too
+                        elif (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) > 0):
+                            print("Agent is pausing, pausing this agent too")
+                            agents_that_move[moving_index] = 0
+
+                            num_bad_conditions += 1
+
+                    # is there going to be a collision where they move into the same spot
+                    if (agents_that_move[outer_agent_moving_index] == 1) and (len(agent.path) > 0) and (
+                        len(check_agent.path) > 0):
+                        if (agent.path[0] == check_agent.path[0]):
+                            print("collision imminent")
+                            num_bad_conditions += 1
+                            agents_that_move[outer_agent_moving_index] = 0
+
 
                 moving_index += 1
             outer_agent_moving_index += 1
@@ -166,6 +209,7 @@ def PPSOCycle(agents):
     for agent_index in range(len(agents)):
         if ((len(agents[agent_index].path) == 0) or (agents[agent_index].goal == agents[agent_index].current_node)):
             agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
+            print(agents[agent_index].path)
 
             if agents[agent_index].path == False:
                 # nothing in agent's queue, grab from large pool
@@ -173,14 +217,14 @@ def PPSOCycle(agents):
                 if len(agents[agent_index].maze.undiscovered) > 0:
                     agents[agent_index].undiscovered.put(agents[agent_index].maze.undiscovered[0])
                     agents[agent_index].path = agents[agent_index].discover(agents[agent_index].current_node)
+                    print(agents[agent_index].path)
 
                 else:
                     # deactivate agent, nowhere for it to go
                     agents[agent_index].path = []
+                    agents[agent_index].goal = agents[agent_index].current_node
                     print("Deactivating agent", agent_index)
                     agents_that_move[agent_index] = 0
-
-
 
     # Conditional loop, loops until best solution for all agents is found
     while (ready_to_move == False):
@@ -193,33 +237,7 @@ def PPSOCycle(agents):
                 # only look at agent if it is active and is not paused and not itself
                 if (agent != check_agent) and (len(check_agent.path) > 0) and (agents_that_move[moving_index] == 1):
 
-                    #***** CHECK FOR COLLISIONS
-                    # is there someone in the next node
-                    if (check_agent.path[0].pos == agent.current_pos):
-                        print("Someone is in the next node")
-                        num_bad_conditions += 1
-                        # if they intend to move, go ahead
-                            # DON'T NEED TO MODIFY ANYTHING
-                        # if they are paused due to inactivity, swap targets with them, you become inactive
-                        if (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) == 0):
-                            agent.ASTAR(agent.current_pos, check_agent.goal)
-                            agents_that_move[outer_agent_moving_index] = 1
-
-                            check_agent.path = []
-                            agents_that_move[moving_index] = 0
-
-                        # if they are paused for one turn, you pause too
-                        elif (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) > 0):
-                            agents_that_move[moving_index] = 0
-
-                    # is there going to be a collision where they move into the same spot
-                    if (agents_that_move[outer_agent_moving_index] == 1) and (len(agent.path) > 0):
-                        if(agent.path[0] == check_agent.path[0]):
-                            print("collision imminent")
-                            num_bad_conditions += 1
-                            agents_that_move[outer_agent_moving_index] = 0
-
-                    #***** CHECK FOR TARGET CHANGE IF BOTH AGENTS ARE ACTIVE
+                    # ***** CHECK FOR TARGET CHANGE IF BOTH AGENTS ARE ACTIVE
                     if len(agent.path) > 0:
 
                         # check for shared targets
@@ -227,22 +245,93 @@ def PPSOCycle(agents):
                             print("Duplicate targets!")
                             # find the furthest of the two agents and tell it to rediscover
                             if (len(agent.path) > len(check_agent.path)):
+                                print("Path length case 1")
                                 agent.path = agent.discover(agent.current_node)
+                                if agent.path == False:
+                                    # nothing in agent's queue, grab from large pool
+
+                                    if len(agent.maze.undiscovered) > 0:
+                                        print("Assigning new path to agent")
+                                        agent.undiscovered.put(agent.maze.undiscovered[0])
+                                        agent.path = agent.discover(agent.current_node)
+
+                                    else:
+                                        # deactivate agent, nowhere for it to go
+                                        agent.path = []
+                                        agent.goal = agent.current_node
+                                        print("Deactivating agent", outer_agent_moving_index)
+                                        agents_that_move[outer_agent_moving_index] = 0
                             else:
+                                print("Path length case 2")
                                 check_agent.path = check_agent.discover(check_agent.current_node)
+                                if check_agent.path == False:
+                                    # nothing in agent's queue, grab from large pool
+
+                                    if len(check_agent.maze.undiscovered) > 0:
+                                        print("Assigning new path to agent")
+                                        check_agent.undiscovered.put(check_agent.maze.undiscovered[0])
+                                        check_agent.path = check_agent.discover(check_agent.current_node)
+
+                                    else:
+                                        # deactivate agent, nowhere for it to go
+                                        check_agent.path = []
+                                        check_agent.goal = check_agent.current_node
+                                        print("Deactivating agent", moving_index)
+                                        agents_that_move[moving_index] = 0
+
                             num_bad_conditions += 1
 
                         # check for target swapping, if two agents are closer to eachothers goals than their own
-                        if (Distance(agent.goal, check_agent.current_node) < Distance(agent.goal, agent.current_node)) and (Distance(check_agent.goal, agent.current_node) < Distance(check_agent.goal, agent.current_node)):
+                        if (Distance(agent.goal, check_agent.current_node) < Distance(agent.goal, agent.current_node)) \
+                                and (Distance(check_agent.goal, agent.current_node) < Distance(check_agent.goal, check_agent.current_node)):
                             print("Swapping Targets")
                             temp_goal = agent.goal
-                            agent.path = agent.ASTAR(agent.current_node, check_agent.goal)
+                            agent.goal = check_agent.goal
+                            agent.path = agent.ASTAR(agent.current_node, agent.goal)
                             check_agent.path = check_agent.ASTAR(check_agent.current_node, temp_goal)
+                            check_agent.goal = temp_goal
                             num_bad_conditions += 1
+
+                    #***** CHECK FOR COLLISIONS
+                    # is there someone in the next node
+                    if len(check_agent.path) > 0 and (check_agent.path[0].pos == agent.current_pos):
+                        print("Someone is in the next node")
+
+                        # if they intend to move, go ahead
+                            # DON'T NEED TO MODIFY ANYTHING
+                        # if they are paused due to inactivity, swap targets with them, you become inactive
+                        if (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) == 0):
+                            print("Other agent inactive, swapping targets with them")
+                            agent.goal = check_agent.goal
+                            agent.ASTAR(agent.current_node, check_agent.goal)
+                            check_agent.goal = check_agent.current_node
+                            agents_that_move[outer_agent_moving_index] = 1
+
+                            check_agent.path = []
+                            agents_that_move[moving_index] = 0
+
+                            num_bad_conditions += 1
+
+                        # if they are paused for one turn, you pause too
+                        elif (agents_that_move[outer_agent_moving_index] == 0) and (len(agent.path) > 0):
+                            print("Agent is pausing, pausing this agent too")
+                            agents_that_move[moving_index] = 0
+
+                            num_bad_conditions += 1
+
+                    # is there going to be a collision where they move into the same spot
+                    if (agents_that_move[outer_agent_moving_index] == 1) and (len(agent.path) > 0) and (len(check_agent.path) > 0):
+                        if(agent.path[0] == check_agent.path[0]):
+                            print("collision imminent")
+                            num_bad_conditions += 1
+                            agents_that_move[outer_agent_moving_index] = 0
+
+
 
                 moving_index += 1
             outer_agent_moving_index += 1
 
+        print("num_bad_conditions: ", num_bad_conditions)
         # if current solution looks good, finish loop
         if (num_bad_conditions == 0):
             ready_to_move = True

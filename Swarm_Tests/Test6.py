@@ -1,5 +1,6 @@
-# Test 1 for Swarm AI
-# L Maze
+# Test 6 for Swarm AI
+# Single row, target sharing avoidance test
+# PASSED
 # PPSOCycle
 
 from Node import Node
@@ -36,31 +37,44 @@ def check_win_condition(agents):
 
     return True
 
-node1 = Node(False,False,False,False,(0,0),True)
-node2 = Node(False,False,False,False,(0,-1),False)
-node3 = Node(False,False,False,False,(0,-2),False)
-node4 = Node(False,False,False,False,(0,-3),False)
-node5 = Node(False,False,False,False,(1,-3),True)
+node1 = Node(False,False,False,False,(0, 5), True)
+node2 = Node(False,False,False,False,(0, 4), True)
+node3 = Node(False,False,False,False,(0, 3), False)
+node4 = Node(False,False,False,False,(0, 2), True)
+node5 = Node(False,False,False,False,(0, 1), True)
+node6 = Node(False,False,False,False,(0, 0), True)
 node1.set_down(node2)
-node2.set_down(node3)
-node3.set_down(node4)
-node4.set_right(node5)
 node2.set_up(node1)
+node2.set_down(node3)
 node3.set_up(node2)
+node3.set_down(node4)
 node4.set_up(node3)
-node5.set_left(node4)
+node4.set_down(node5)
+node5.set_up(node4)
+node5.set_down(node6)
+node6.set_up(node5)
 
-nodes = [node1, node2, node3, node4, node5]
+nodes = [node1, node2, node3, node4, node5, node6]
 
 foo = Maze(nodes)
 agent1 = Agent(node1,foo)
-agent2 = Agent(node5,foo)
+agent2 = Agent(node6,foo)
+
+agent1.goal = node3
+agent1.ASTAR(agent1.current_node, agent1.goal)
+
+agent2.goal = node3
+agent2.ASTAR(agent2.current_node, agent2.goal)
 agents = [agent1, agent2]
+
+agents[0].maze.undiscovered.remove(node3)
+
+PrintAgent(agents[0], 1)
+PrintAgent(agents[1], 2)
 
 print("Begin maze")
 print("Agent 1 location: ", agent1.current_pos)
 print("Agent 2 location: ", agent2.current_pos)
-
 
 while not check_win_condition(agents):
     input(">>> Press enter to continue")

@@ -52,8 +52,11 @@ class Agent:
                 #this is the most recent undiscovered node which should be the most efficient node to get to.
                 next_node = self.undiscovered.get()
 
-                while(next_node not in self.maze.undiscovered):
+                while(next_node not in self.maze.undiscovered) and not self.undiscovered.empty():
                     next_node = self.undiscovered.get()
+
+                if self.undiscovered.empty() and next_node not in self.maze.undiscovered:
+                    return False
                 #print next_node.pos
                 next_node.set_discovered()
                 self.goal = next_node

@@ -1,5 +1,6 @@
 # Test 1 for Swarm AI
-# L Maze
+# Single row, swap target test
+# PASSED with 2 Agents
 # PPSOCycle
 
 from Node import Node
@@ -36,31 +37,33 @@ def check_win_condition(agents):
 
     return True
 
-node1 = Node(False,False,False,False,(0,0),True)
-node2 = Node(False,False,False,False,(0,-1),False)
-node3 = Node(False,False,False,False,(0,-2),False)
-node4 = Node(False,False,False,False,(0,-3),False)
-node5 = Node(False,False,False,False,(1,-3),True)
+node1 = Node(False,False,False,False,(0, 5), False)
+node2 = Node(False,False,False,False,(0, 4), True)
+node3 = Node(False,False,False,False,(0, 3), True)
+node4 = Node(False,False,False,False,(0, 2), True)
+node5 = Node(False,False,False,False,(0, 1), True)
+node6 = Node(False,False,False,False,(0, 0), False)
 node1.set_down(node2)
-node2.set_down(node3)
-node3.set_down(node4)
-node4.set_right(node5)
 node2.set_up(node1)
+node2.set_down(node3)
 node3.set_up(node2)
+node3.set_down(node4)
 node4.set_up(node3)
-node5.set_left(node4)
+node4.set_down(node5)
+node5.set_up(node4)
+node5.set_down(node6)
+node6.set_up(node5)
 
-nodes = [node1, node2, node3, node4, node5]
+nodes = [node1, node2, node3, node4, node5, node6]
 
 foo = Maze(nodes)
-agent1 = Agent(node1,foo)
-agent2 = Agent(node5,foo)
+agent1 = Agent(node4,foo)
+agent2 = Agent(node3,foo)
 agents = [agent1, agent2]
 
 print("Begin maze")
 print("Agent 1 location: ", agent1.current_pos)
 print("Agent 2 location: ", agent2.current_pos)
-
 
 while not check_win_condition(agents):
     input(">>> Press enter to continue")
