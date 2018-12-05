@@ -58,6 +58,7 @@ def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug):
 
     cycle_statistics = []
     single_step = True
+    num_cycles = 0
     # loop through until maze is solved
     while not check_win_condition(agents):
 
@@ -77,8 +78,9 @@ def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug):
 
         if swarm_algorithm == "PPSO":
             cycle_statistics.append(PPSOCycle(agents))
-        else:  # use EPSOCycle
-            cycle_statistics.append(EPSOCycle(agents))
+        # else:  # use EPSOCycle
+        #     cycle_statistics.append(EPSOCycle(agents))
+        num_cycles += 1
 
     # End of loop
     print("\n *** Maze Discovery Complete *** ")
@@ -90,7 +92,9 @@ def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug):
             for incident in cycle_statistics[index_val]:
                 print("* EVENT:")
                 print("    Type:", incident[0])
-                print("    Location", incident[1])
+                print("    Location:", incident[1])
+                if incident[0] == "SWAPPING_TARGETS":
+                    print("    Location:", incident[2])
 
     # Write statistics to output file
     # Line Format: num_agents,num_nodes,cycle_num,num_undiscovered,incident_type,incident_location
@@ -103,7 +107,7 @@ def run_maze(maze_filename, num_agents, swarm_algorithm, enable_debug):
                 out_file_handle.write(str(num_agents) + "," + str(len(maze.nodes)) + "," + str(index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(incident[1]) + "\"" + str(incident[2]) + "\"\n")
             else:
                 out_file_handle.write(str(num_agents) + "," + str(len(maze.nodes)) + "," + str(index_val + 1) + "," + str(len(maze.undiscovered)) + ",\"" + incident[0] + "\",\"" + str(incident[1]) + "\"\n")
-
+    out_file_handle.write("TOTAL_CYCLES," + str(num_cycles) + "\n")
     out_file_handle.close()
     # END OF FUNCTION
 
@@ -133,9 +137,9 @@ def main(input_arguments):
 
     # verify maze file exists
     maze_filename = input_arguments[1]
-    if not os.path.isfile(maze_filename):
-        print("Invalid maze file. File not found!")
-        return 1
+    # if not os.path.isfile(maze_filename):
+    #     print("Invalid maze file. File not found!")
+    #     return 1
 
     # Run through program with various agents
     for i in range(1, num_agents):

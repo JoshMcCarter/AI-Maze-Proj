@@ -52,7 +52,8 @@ class Maze:
 
 
   def make_connections(self):
-    print("in make connections")
+    if self.debug is True:
+      print("in make connections")
     for y in range(len(self.grid)):
       for x in range(len(self.grid[y])):
         if (y + 1 <= len(self.grid)-1) and (self.grid[y][x][1] != 1) and (self.grid[y][x][1] == self.grid[y+1][x][0]):

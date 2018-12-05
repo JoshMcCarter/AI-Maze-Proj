@@ -145,7 +145,6 @@ class Agent:
         path = [current_node]
         current_node = current_node.parent
         while current_node is not None and current_node != start:
-            #print("bussy")
             path.append(current_node)
             current_node = current_node.parent
             
