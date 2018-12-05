@@ -1,7 +1,6 @@
 from tkinter import *
 from Swarm import PPSOCycle
 
-
 class UserInterface:
     def __init__(self, maze, agents):
         self.width = 500
@@ -20,14 +19,32 @@ class UserInterface:
         self.left_frame.pack(side=LEFT)
         self.right_frame.pack(side=RIGHT)
 
+        self.one_step_flag = 0
+        self.start_flag = False
+        self.pause_flag = False
+
+
         def one_step():
             print("one step")
+            # PPSOCycle(agents)
+            # self.update(maze, agents)
+            self.one_step_flag += 1
+            self.pause_flag = False
+            self.start_flag = False
 
         def start():
             print("start")
+            self.start_flag = True
+            self.pause_flag = False
+            self.one_step_flag = 0
 
         def pause():
             print("pause")
+            self.pause_flag = True
+            self.start_flag = False
+            self.one_step_flag = 0
+
+
         self.button_one_step = Button(self.right_frame, text="One Step", fg="blue", command=one_step)
         self.button_start = Button(self.right_frame, text="Start", fg="blue", command=start)
         self.button_pause = Button(self.right_frame, text="Pause", fg="blue", command=pause)

@@ -6,6 +6,7 @@ from Node import Node
 from OldMaze import Maze
 from Agent import Agent
 from Swarm import PPSOCycle
+import random
 
 def PrintAgent(agent, agent_num):
     print("*** AGENT", agent_num)
@@ -68,14 +69,16 @@ node9.set_up(node4)
 nodes = [node1,node2,node3,node4,node5,node6,node7,node8, node9]
 
 foo = Maze(nodes)
-
-agent1 = Agent(node1,foo)
-agent2 = Agent(node5,foo)
-agents = [agent1, agent2]
+num_agents = 2
+agents = []
+for x in range(num_agents):
+    random_node = random.choice(foo.undiscovered)  # select random node
+    foo.undiscovered.remove(random_node)
+    agents.append(Agent(random_node, foo))
 
 print("Begin maze")
-print("Agent 1 location: ", agent1.current_pos)
-print("Agent 2 location: ", agent2.current_pos)
+print("Agent 1 location: ", agents[0].current_pos)
+print("Agent 2 location: ", agents[1].current_pos)
 
 while not check_win_condition(agents):
     input(">>> Press enter to continue")

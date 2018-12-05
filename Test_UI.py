@@ -3,7 +3,7 @@
 # PPSOCycle
 
 from Node import Node
-from Maze import Maze
+from OldMaze import Maze
 from Agent import Agent
 from Swarm import PPSOCycle
 from UI import UserInterface                                            # add for UI

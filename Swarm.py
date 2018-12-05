@@ -225,7 +225,7 @@ def PPSOCycle(agents):
                     agents[agent_index].goal = agents[agent_index].current_node
                     print("Deactivating agent", agent_index)
                     agents_that_move[agent_index] = 0
-
+    returnVal = -1
     # Conditional loop, loops until best solution for all agents is found
     while (ready_to_move == False):
         num_bad_conditions = 0  # number of issues with the next cycle to resolve
@@ -332,6 +332,11 @@ def PPSOCycle(agents):
             outer_agent_moving_index += 1
 
         print("num_bad_conditions: ", num_bad_conditions)
+
+        # save first count of bad conditions for return
+        if returnVal == -1:
+            returnVal = num_bad_conditions
+
         # if current solution looks good, finish loop
         if (num_bad_conditions == 0):
             ready_to_move = True
@@ -343,3 +348,6 @@ def PPSOCycle(agents):
         if (agents_that_move[cur_agent_index] == 1): # if agent is supposed to move this cycle
             print("Moving agent", cur_agent_index)
             agents[cur_agent_index].move(agents[cur_agent_index].path)
+
+
+    return returnVal
