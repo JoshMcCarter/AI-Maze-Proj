@@ -36,7 +36,7 @@ def main():
     node6 = Node(False, False, False, False, (2, 1), False)
     node7 = Node(False, False, False, False, (2, 0), False)
     node8 = Node(False, False, False, False, (1, 0), False)
-    node9 = Node(False, False, False, False, (1, 1), False)
+    #node9 = Node(False, False, False, False, (1, 1), False)
 
     node1.set_up(node2)
     node1.set_right(node8)
@@ -55,11 +55,10 @@ def main():
     node7.set_up(node6)
     node8.set_right(node7)
     node8.set_left(node1)
-    node4.set_down(node9)
-    node9.set_up(node4)
+    #node4.set_down(node9)
+    #node9.set_up(node4)
 
-    nodes = [node1, node2, node3, node4, node5, node6, node7, node8, node9]
-
+    nodes = [node1, node2, node3, node4, node5, node6, node7, node8 ]
     maze1 = Maze(nodes)
 
     # make agents here
@@ -71,19 +70,19 @@ def main():
 
     # make UI here
     ui = UserInterface(maze1, agents)
-    print("Done setting up UI")
+#    print("Done setting up UI")
 
     # main loop
-    while not check_win_condition(agents):
+ #   while not check_win_condition(agents):
 
-        if ui.one_step_flag > 0 and ui.pause_flag is False and ui.start_flag is True:
-            PPSOCycle(agents)
-            ui.update(maze1, agents)
-            ui.one_step_flag -= 1
+  #      if ui.one_step_flag > 0 and ui.pause_flag is False and ui.start_flag is True:
+   #         PPSOCycle(agents)
+    #        ui.update(maze1, agents)
+     #       ui.one_step_flag -= 1
 
-        if ui.start_flag is True and ui.pause_flag is False:
-            PPSOCycle(agents)
-            ui.update(maze1, agents)
+      #  if ui.start_flag is True and ui.pause_flag is False:
+       #     PPSOCycle(agents)
+        #    ui.update(maze1, agents)
 
 
 main()

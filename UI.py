@@ -26,8 +26,8 @@ class UserInterface:
 
         def one_step():
             print("one step")
-            # PPSOCycle(agents)
-            # self.update(maze, agents)
+            PPSOCycle(agents)
+            self.update(maze, agents)
             self.one_step_flag += 1
             self.pause_flag = False
             self.start_flag = False
@@ -37,6 +37,9 @@ class UserInterface:
             self.start_flag = True
             self.pause_flag = False
             self.one_step_flag = 0
+            while self.start_flag:
+                PPSOCycle(agents)
+                self.update(maze, agents)
 
         def pause():
             print("pause")
@@ -89,12 +92,23 @@ class UserInterface:
             self.size = self.width/(self.maxx - self.minx)
         else:
             self.size = self.width/(self.maxy - self.miny)
+
+        if self.size > 50:
+            self.size = 50
+
         # show default maze
         for i in range(0, self.maxx - self.minx + 1):
             for j in range(0, self.maxy - self.miny + 1):
                 self.labels[i][j] = \
                     Label(self.left_frame,image=self.photo_empty,bg="black", width=self.size, height=self.size)
                 self.labels[i][j].grid(row=j, column=i)
+
+        for node in nodes:
+            i = node.pos[0]
+            j = node.pos[1]
+            self.labels[i - self.minx][j - self.miny] = \
+                Label(self.left_frame, image=self.photo_empty, bg="gray", width=self.size, height=self.size)
+            self.labels[i - self.minx][j - self.miny].grid(row=j - self.miny, column=i - self.minx)
 
         for agent in agents:
             i = agent.current_pos[0]
@@ -120,11 +134,13 @@ class UserInterface:
         self.root.mainloop()
 
     def update(self, maze, agents):
+        print("updata called")
 
         nodes = maze.nodes
 
         for node in nodes:
             if node.discovered:
+                print(node.pos)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny] = \
                     Label(self.left_frame, image=self.photo_empty, bg="green", width=50, height=50)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny]. \
@@ -144,7 +160,7 @@ class UserInterface:
                     x = agent.current_pos[0]
                     y = agent.current_pos[1]
                     x = x + i - 2
-                    y = x + j - 2
+                    y = y + j - 2
                     if x < 0:
                         self.agents_labels[k][i][j] = \
                             Label(self.agents_view[k], image=self.photo_cloud, width=50, height=50)
@@ -165,22 +181,29 @@ class UserInterface:
                             Label(self.agents_view[k], image=self.photo_cloud, width=50, height=50)
                         self.agents_labels[k][i][j].grid(row=j, column=i)
                         continue
-                    if self.labels[x][y].bg == "green":
-                        for node in nodes:
+                    self.agents_labels[k][i][j] = \
+                        Label(self.agents_view[k], image=self.photo_cloud, width=50, height=50)
+                    self.agents_labels[k][i][j].grid(row=j, column=i)
+ #                   if self.labels[x][y].background == "green":
+                    for node in nodes:
+                        if node.discovered:
                             if node.pos[0] == x and node.pos[1] == y:
                                 if node.up:
                                     if node.down:
                                         if node.left:
                                             if node.right:
                                                 self.agents_labels[k][i][j] = \
-                                                    Label(self.agents_view[k], image=self.photo_udlr, width=50, height=50)
+                                                    Label(self.agents_view[k], image=self.photo_udlr, width=50,
+                                                          height=50)
                                             else:
                                                 self.agents_labels[k][i][j] = \
-                                                    Label(self.agents_view[k], image=self.photo_udl, width=50, height=50)
+                                                    Label(self.agents_view[k], image=self.photo_udl, width=50,
+                                                          height=50)
                                         else:
                                             if node.right:
                                                 self.agents_labels[k][i][j] = \
-                                                    Label(self.agents_view[k], image=self.photo_udr, width=50, height=50)
+                                                    Label(self.agents_view[k], image=self.photo_udr, width=50,
+                                                          height=50)
                                             else:
                                                 self.agents_labels[k][i][j] = \
                                                     Label(self.agents_view[k], image=self.photo_ud, width=50, height=50)
@@ -188,7 +211,8 @@ class UserInterface:
                                         if node.left:
                                             if node.right:
                                                 self.agents_labels[k][i][j] = \
-                                                    Label(self.agents_view[k], image=self.photo_ulr, width=50, height=50)
+                                                    Label(self.agents_view[k], image=self.photo_ulr, width=50,
+                                                          height=50)
                                             else:
                                                 self.agents_labels[k][i][j] = \
                                                     Label(self.agents_view[k], image=self.photo_ul, width=50, height=50)
@@ -204,7 +228,8 @@ class UserInterface:
                                         if node.left:
                                             if node.right:
                                                 self.agents_labels[k][i][j] = \
-                                                    Label(self.agents_view[k], image=self.photo_dlr, width=50, height=50)
+                                                    Label(self.agents_view[k], image=self.photo_dlr, width=50,
+                                                          height=50)
                                             else:
                                                 self.agents_labels[k][i][j] = \
                                                     Label(self.agents_view[k], image=self.photo_dl, width=50, height=50)
@@ -229,6 +254,11 @@ class UserInterface:
                                                     Label(self.agents_view[k], image=self.photo_r, width=50, height=50)
                                             else:
                                                 self.agents_labels[k][i][j] = \
-                                                    Label(self.agents_view[k], image=self.photo_cloud, width=50, height=50)
+                                                    Label(self.agents_view[k], image=self.photo_cloud, width=50,
+                                                          height=50)
                             self.agents_labels[k][i][j].grid(row=j, column=i)
+                    if i == 2 and j ==2:
+                        self.agents_labels[k][i][j] = \
+                            Label(self.agents_view[k], image=self.photo_agent, width=50, height=50)
+                        self.agents_labels[k][i][j].grid(row=j, column=i)
             self.agents_view[k].update()
