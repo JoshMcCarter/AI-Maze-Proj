@@ -142,7 +142,7 @@ class UserInterface:
             if node.discovered:
                 print(node.pos)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny] = \
-                    Label(self.left_frame, image=self.photo_empty, bg="green", width=50, height=50)
+                    Label(self.left_frame, image=self.photo_empty, bg="green", width=self.size, height=self.size)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny]. \
                     grid(row=node.pos[1] - self.miny, column=node.pos[0] - self.minx)
         for agent in agents:
