@@ -134,13 +134,11 @@ class UserInterface:
         self.root.mainloop()
 
     def update(self, maze, agents):
-        print("updata called")
 
         nodes = maze.nodes
 
         for node in nodes:
             if node.discovered:
-                print(node.pos)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny] = \
                     Label(self.left_frame, image=self.photo_empty, bg="green", width=self.size, height=self.size)
                 self.labels[node.pos[0] - self.minx][node.pos[1] - self.miny]. \
@@ -187,11 +185,6 @@ class UserInterface:
 
                     for node in nodes:
                         if node.discovered:
-                            print(node.pos)
-                            print(node.up)
-                            print(node.down)
-                            print(node.left)
-                            print(node.right)
                             if node.pos[0] == x and node.pos[1] == y:
                                 if node.up:
                                     if node.down:
