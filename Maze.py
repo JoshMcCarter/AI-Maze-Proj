@@ -1,13 +1,12 @@
 from Node import Node
 
-FILE_NAME = "maze.txt"
-
 class Maze:
   
   def __init__(self, filename):
     self.gg = self.read_file(filename) ##read file
     self.grid = self.gg[0]
     self.graph = self.gg[1]
+    self.make_connections()
     self.nodes = []
     self.process_valid_nodes()
     self.generate_edges()
@@ -24,11 +23,11 @@ class Maze:
 
 
   def read_file(self, filename):
-    filename = FILE_NAME ##TEMPERTORARY
+    file = filename ##TEMPERTORARY
     grid = []
     graph = []
     row = -1
-    with open(filename) as f:
+    with open(file) as f:
       for line in f:
         grid.append([])
         graph.append([])
@@ -41,41 +40,54 @@ class Maze:
           if i % 4 == 0:
             col += 1
             grid[row].append([])
+            graph[row].append([])
             posTuple = (col, row)
-            graph[row][col] = Node(None, None, None, None, posTuple, None)
             grid[row][col] = [0]*4
+            graph[row][col] = Node(False, False, False, False, posTuple, False)
+            
           grid[row][col][i % 4] = c
           i += 1
     return [grid, graph]
 
 
   def make_connections(self):
+    print("in make connections")
     for y in range(len(self.grid)):
       for x in range(len(self.grid[y])):
-
-        if self.grid[y][x][1] == 0 and y + 1 < len(self.grid) and self.grid[y + 1][x][0] == 0:
-          self.graph[y][x].down = self.graph[y + 1][x]
-          self.graph[y + 1][x].top = self.graph[y][x]
-        
-        if self.grid[y][x][3] == 0 and x + 1 < len(self.grid[y]) and self.grid[y][x + 1][2] == 0:
-          self.graph[y][x].right = self.graph[y][x + 1]
-          self.graph[y][x + 1].left = self.graph[y][x]
+        if (y + 1 <= len(self.grid)-1) and (self.grid[y][x][1] != 1) and (self.grid[y][x][1] == self.grid[y+1][x][0]):
+          #print("foo")
+          self.graph[y][x].set_down(self.graph[y + 1][x])
+          self.graph[y + 1][x].set_up(self.graph[y][x])
+        if (x + 1 < len(self.grid[y])) and (self.grid[y][x][3] != 1) and (self.grid[y][x][3] == self.grid[y][x+1][2]):
+          #print("bar")
+          self.graph[y][x].set_right(self.graph[y][x + 1])
+          self.graph[y][x + 1].set_left(self.graph[y][x])
 
 
   def BFS(self, node):
-    node.setValid(True)
-    self.nodes.append(node)
-    
-    if(node.down != None and node.down.valid == False):
-      self.BFS(node.down)
-    if(node.right != None and node.right.valid == False):
-      self.BFS(node.right)  
-    if(node.up != None and node.up.valid == False):
-      self.BFS(node.up)
-    if(node.left != None and node.left.valid == False):
-      self.BFS(node.left) 
+    queue = []
+    queue.append(node)
+    while len(queue) > 0:
+      #print("WE ARE IN BFS")
+      node = queue.pop(0)
+      self.nodes.append(node)
+      if node.down and node.down.valid == False:
+        #print("SHOULD BE SETTING DOWN CONNECTION")
+        node.down.set_valid(True)
+        queue.append(node.down)      
+      if node.up and node.up.valid == False:
+        #print("SHOULD BE SETTING UP CONNECTION")
+        node.up.set_valid(True)
+        queue.append(node.up)
+      if node.right and node.right.valid == False:
+        #print("SHOULD BE SETTING RIGHT CONNECTION")
+        node.right.set_valid(True)
+        queue.append(node.right)
+      if node.left and node.left.valid == False:
+        #print("SHOULD BE SETTING LEFT CONNECTION")
+        node.left.set_valid(True)
+        queue.append(node.left)
 
-  
   def process_valid_nodes(self):
     node = self.graph[0][0]
     self.BFS(node) 
