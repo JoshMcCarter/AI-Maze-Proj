@@ -127,21 +127,21 @@ def main(input_arguments):
         debug = False
 
     # check swarm algorithm variable
-    swarm_algorithm = input_arguments[2].upper()
+    swarm_algorithm = input_arguments[3].upper()
     if swarm_algorithm != "PPSO" and swarm_algorithm != "EPSO":
         print("Invalid Swarm algorithm. Choices are: PPSO, EPSO")
         return 1
 
     if swarm_algorithm == "EPSO":
-        radius = int(input_arguments[3])
+        radius = int(input_arguments[4])
     else:
         radius = 0
 
     # get number of agents:
-    num_agents = input_arguments[1]
+    num_agents = input_arguments[2]
 
     # verify maze file exists
-    maze_filename = input_arguments[0]
+    maze_filename = input_arguments[1]
 
     # Run through program with various agents
     if swarm_algorithm == "PPSO":
