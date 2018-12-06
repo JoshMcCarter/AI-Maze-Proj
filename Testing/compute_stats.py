@@ -4,12 +4,15 @@ import csv
 from random import randint
 import re
 
+#This was the selected sample, hardcoded into this file after randomly selected in gather_stats.py
+#setup globals
 START_PATH = "MazeCSVs\\tinymaze1600_"
 END_PATH = "_OUTPUT.csv"
 SAMPLE_NUMS = [107,1749,4462,4499,4649,4771,5649,5726,5827,5879,6153,6861,7422,8667,8926,8957,9563,10247,10534,11472,11476,11573,11841,11945,12305,12616,12681,12787,12863,14510,14883]
 NUM_SAMPLES = len(SAMPLE_NUMS)
 paths = [START_PATH+str(num)+END_PATH for num in SAMPLE_NUMS]
 
+#setup vars we want
 nodes_per_file = []
 avg_collisions = []
 cycles_per_agent = [] 
@@ -17,11 +20,13 @@ avg_cycles = []
 random_case = 9
 
 def get_agents_moved_per_cycle():
+    #loop over all the files for a given condition
     list_of_agents_per_cycle = []
     path = paths[random_case]
     with open(path, newline='') as csvfile:
         for line in csvfile:
             info = line.split(",")
+            #only look at 63 agents this time
             if len(info) > 4 and int(info[0]) == 63:
                 if info[5] == "\"AGENTS_THAT_MOVE_THIS_CYCLE\"":
                     num = info[6][1:3]
@@ -32,8 +37,10 @@ def get_agents_moved_per_cycle():
     return list_of_agents_per_cycle
 
 def get_frequencies_of_errors():
+    #list of dictionaries
     all_freqs = []
     for path in paths:
+        #dict with num_agent:[error frequencies]
         curr_file_freqs = {i:[0,0,0,0,0] for i in range(1,64)}
         with open(path, newline='') as csvfile:
             for line in csvfile:
@@ -54,26 +61,32 @@ def get_frequencies_of_errors():
     return all_freqs
 
 def calculate_average_freqs(frequencies):
+    #sum over all the freqs
     total_freqs = {i:[0,0,0,0,0] for i in range(1,64)}
     for i in range(len(frequencies)):
         for key in frequencies[i].keys():
+            #add all the frequencies in onee central place
             for j in range(5):
                 total_freqs[key][j] += frequencies[i][key][j]
     
     for key in total_freqs.keys():
+        #compute the average
         for i in range(5):
             total_freqs[key][i] /= NUM_SAMPLES
             
     return total_freqs
     
 def get_average_nodes_per_file():
+    #loop over all paths
     for path in paths:
         with open(path, newline='') as csvfile:
             for line in csvfile:
                 info = line.split(",")
+                #only need to find nodes one time, its in every line
                 nodes_per_file.append(int(info[2]))
                 break
-            csvfile.close()       
+            csvfile.close()
+    #return the average
     return sum(nodes_per_file)/len(nodes_per_file)
 
 def get_cylcles_per_agent():
@@ -82,14 +95,16 @@ def get_cylcles_per_agent():
             agents_in_current = []
             for line in csvfile:
                 info = line.split(",")
+                #loop until total cycles line found
                 if info[0] == "TOTAL_CYCLES":
                     num_cycles = info[1]
                     agents_in_current.append(int(num_cycles))
-                    
+            #add to master list        
             cycles_per_agent.append(agents_in_current)
             csvfile.close()
 
 def compute_avg_cycles_per_agent():
+    #compute average for each n number of agents
     averages = [0 for i in range(63)]
     for i in range(len(cycles_per_agent)):
         for j in range(63):
@@ -100,6 +115,7 @@ def compute_avg_cycles_per_agent():
 
     
 def get_reconstructs_per_agent():
+    #loop over all paths
     collisions = [0 for i in range(64)]
     error_lines = []
     for path in paths:
@@ -107,23 +123,27 @@ def get_reconstructs_per_agent():
             for line in csvfile:
                 info = line.split(",")
                 if len(info) > 4:
+                    #collision lines dont read agents that move this cycle
                     if info[5] != "\"AGENTS_THAT_MOVE_THIS_CYCLE\"":
                         error_lines.append(info)
             csvfile.close()
  
+    #compute the average
     for line in error_lines:
         collisions[int(line[0])] += 1    
     return [collisions[i]/NUM_SAMPLES for i in range(len(collisions))]
     
     
 def make_graphs():
+    #get vars needed
     get_cylcles_per_agent()
     avg_cycles = compute_avg_cycles_per_agent()
     avg_collisions = get_reconstructs_per_agent()
     input_cycles = np.array(avg_cycles)
     input_collisions = np.array(avg_collisions)
     
-    """plt.plot([i for i in range(1,64)],avg_cycles,'ro')
+    #create plots
+    plt.plot([i for i in range(1,64)],avg_cycles,'ro')
     plt.suptitle('Number of Agents vs. Average Cycles')
     plt.xlabel('Number of Agents')
     plt.ylabel('Average Number of Cycles')
@@ -172,7 +192,7 @@ def make_graphs():
     plt.ylabel('Average Frequency of Conflict')
     plt.xticks(index+2.5*bar_width,(i for i in range(2,64)))
     plt.legend()
-    plt.show()"""
+    plt.show()
     
     agents_moved_per_cycle = get_agents_moved_per_cycle()
     prop_of_agents_moved_per_cycle = [agents_moved_per_cycle[i]/63 for i in range(len(agents_moved_per_cycle))]

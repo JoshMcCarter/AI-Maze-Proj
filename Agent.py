@@ -8,16 +8,13 @@ class Agent:
         self.current_pos = start.pos
         self.current_node = start
         self.start.set_discovered()
-        #self.maze.undiscovered.remove(self.start)
         self.path = []
         self.goal = False
         self.undiscovered = queue.LifoQueue() #keep history of undiscovered nodes passed
 
     def move(self,path):
-        #print path
         self.current_pos = path[0].pos
         self.current_node = path[0]
-        #print self.current_node
         path.remove(self.current_node)
 
     def discover(self,current_node):
@@ -57,10 +54,8 @@ class Agent:
 
                 if self.undiscovered.empty() and next_node not in self.maze.undiscovered:
                     return False
-                #print next_node.pos
                 next_node.set_discovered()
                 self.goal = next_node
-                #print self.maze.undiscovered
                 self.maze.undiscovered.remove(next_node)
                 return self.ASTAR(current_node,next_node)
             else:
@@ -141,9 +136,10 @@ class Agent:
         node.f_A = node.g_A + node.h_A
         
     def reconstruct(self,current_node,start):
-        #came_from.remove(came_from[0])
+        #iteratively trace path back from the end
         path = [current_node]
         current_node = current_node.parent
+        #parents set in A* just loop til start or none
         while current_node is not None and current_node != start:
             path.append(current_node)
             current_node = current_node.parent
