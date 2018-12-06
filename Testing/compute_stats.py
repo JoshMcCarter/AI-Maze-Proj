@@ -14,7 +14,7 @@ nodes_per_file = []
 avg_collisions = []
 cycles_per_agent = [] 
 avg_cycles = []
-random_case = randint(0,len(SAMPLE_NUMS)-1)
+random_case = 9
 
 def get_agents_moved_per_cycle():
     list_of_agents_per_cycle = []
@@ -123,7 +123,7 @@ def make_graphs():
     input_cycles = np.array(avg_cycles)
     input_collisions = np.array(avg_collisions)
     
-    plt.plot([i for i in range(1,64)],avg_cycles,'ro')
+    """plt.plot([i for i in range(1,64)],avg_cycles,'ro')
     plt.suptitle('Number of Agents vs. Average Cycles')
     plt.xlabel('Number of Agents')
     plt.ylabel('Average Number of Cycles')
@@ -172,13 +172,13 @@ def make_graphs():
     plt.ylabel('Average Frequency of Conflict')
     plt.xticks(index+2.5*bar_width,(i for i in range(2,64)))
     plt.legend()
-    plt.show()
+    plt.show()"""
     
     agents_moved_per_cycle = get_agents_moved_per_cycle()
     prop_of_agents_moved_per_cycle = [agents_moved_per_cycle[i]/63 for i in range(len(agents_moved_per_cycle))]
     
-    plt.plot([i for i in range(1,len(agents_moved_per_cycle)+1)],prop_of_agents_moved_per_cycle,'ro')
-    plt.suptitle('Propotion of Agents Used per Cycle on Maze ' + str(SAMPLE_NUMS[random_case]))
+    plt.plot([i for i in range(1,len(agents_moved_per_cycle)+1)],prop_of_agents_moved_per_cycle,'.')
+    plt.suptitle('Propotion of Agents Used per Cycle on Maze ' + str(SAMPLE_NUMS[random_case]) + " With 63 Agents")
     plt.xlabel('Cycle Number')
     plt.ylabel('Proportion of Agents Used')
     plt.axis([1,len(agents_moved_per_cycle),0,1.1])
