@@ -1,9 +1,10 @@
 //const GRID_SIZE = 4600000; //square centimeters
-const GRID_SIZE = 1600;
+const GRID_SIZE = 2000;
 var CUSTOM_rows = null;
 var CUSTOM_cols = null;
 
 var GRID = [];
+var numObstacles = 0;
 
 var RandomSequenceOfUnique = (function () {
     function RandomSequenceOfUnique(seedBase, seedOffset) {
@@ -48,17 +49,25 @@ function customDimensions() {
     return [CUSTOM_rows, CUSTOM_cols];
 }
 
-function generateObstacle(y, x) {
+function generateObstacle(y, x, yBound, xBound) {
     //console.log("obstacle");
-    //size of obstacle 
-    rows = y + 20;
-    cols = x + 15;
-    
-   /* for (var i = y; i < rows; i++) {
-        for (var j = x; j < cols; j++) {
-            GRID[i][j] = [1, 1, 1, 1];
-        }
-    } */
+    //size of obstacle
+    rows = y + 7;
+    cols = x + 3;
+
+    var temp;
+    if (Math.floor(Math.random() * 2) == 1) { //randomize length and width
+        temp = rows;
+        rows = cols;
+        cols = temp;
+    }
+
+    if(  (rows >= yBound) || (cols >= xBound) || (y == 0 && x == 0) ) {
+        return; //bounds checking 
+    }
+
+
+    numObstacles++;
 
     for (var i = y; i < rows; i++) {
         GRID[i][x] = [0, 0, 1, 0]; //left wall
@@ -94,20 +103,13 @@ function generateOutline() {
             GRID[i][j] = [0, 0, 0, 0];
         }
     }
-    /* scary algo
-    for (var i = 0; i < rows; i++) {
-        for (var j = 0; j < cols; j++) {
-            if(Math.floor(Math.random() * 100) < 10 && j < rows - 80 && i < cols - 120 ) {
-                generateObstacle(i, j);
-            }
-        }
-    } */
+
 
     for (var i = 0; i < rows; i++) {
         var generator = new RandomSequenceOfUnique(Date.now(), parseInt(Math.random() * 10000));
         for (var j = 0; j < cols; j++) {
-            if ( (generator.next() % 100000 < 10) && (i < rows - 20) && (j < cols - 15)) {
-                generateObstacle(i, j);
+            if ( (generator.next() % 100000 < 500) ) {
+                generateObstacle(i, j, rows, cols);
                // i += 50;
                 //j += 70;
                 generator.next();
@@ -213,23 +215,33 @@ function printMap(filename) {
 
 function mapGenerator(numMaps) {
     promptUser();
-    
-    
-    //drawMap(); comment this out for txt file
+
     for(var i = 1; i <= numMaps; i++) {
         generateOutline();
-        num = i + 0; //for file naming generate file by blocks to not overwork procssor
+        num = i + 2100; //for file naming generate file by blocks to not overwork procssor
         currentFilename = FILE_PREFIX + num;
         printMap(currentFilename); //comment printMap() to visualize in html
         GRID = [];
+        console.log(numObstacles);
+        numObstacles = 0;
     }
     console.log("done");
 }
 
-const NUM_MAPS = 1; //number of maps to generate
-const FILE_PREFIX = "tinymaze" + GRID_SIZE + "_";
+function visualizeMap() {
+    generateOutline();
+    drawMap();
+    console.log(numObstacles)
+    numObstacles  = 0;
+    
+}
+
+
+const NUM_MAPS = 2600; //number of maps to generate
+const FILE_PREFIX = "smallObstacleMazes" + GRID_SIZE + "_";
 
 mapGenerator(NUM_MAPS)
+//visualizeMap();
 
 
 
